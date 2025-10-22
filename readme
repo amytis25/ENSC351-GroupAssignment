@@ -1,0 +1,29 @@
+**Application pseudo-code**
+Display the welcome message and directions on how to play.
+Continuously loop through the following steps:
+1. Print a “get ready” message, and do the following four (4) times to flash the BYAI’s LEDs:
+    a) Turn on the green LED for 250ms, then turn off.
+    b) Turn on the red LED for 250ms, then turn off.
+2. If the user is pressing the joystick up or down, tell them “Please let go of joystick” (just once)
+and then wait until the joystick is not pressing up or down.
+3. Wait a random amount of time between 0.5s and 3.0s.
+4. If, after the delay, the user is pressing the joystick up or down, tell them “too soon” and go
+back to step 1. No need to check for joystick state during the delay.
+5. Picks a random direction (up or down)
+    a) Print the direction name to the screen.
+    b) Display on the BYAI’s LED:
+    If chose “Up”, the turn on the green LED.
+    If chose “Down” turn on the red LED.
+6. Time how long it takes for the user to press the joystick in any direction.
+    If timer > 5s, exit program right away with a message.
+7. Process the user’s joystick press:
+    a) If the user pressed up or down correctly, then:
+    - print a message,
+    - if this was the fastest correct response time yet then display that in a message,
+    - display this attempt’s response time, and best response time so far (in ms),
+    - flash the green LED on and off five times in one second.
+    b) If the user pressed up or down incorrectly, print a message and flash the red LED on and
+    off five times in one second.
+    c) If the user pressed the joystick left or right, print a message and quit.
+
+
