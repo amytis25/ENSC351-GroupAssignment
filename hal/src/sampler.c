@@ -1,10 +1,17 @@
-#include "hal/timing.h"
-#include "hal/sampler.h"
+
 #include <stdio.h> // fopen, fprintf, fclose, perror
 #include <stdlib.h>  // exit, EXIT_FAILURE, EXIT_SUCCESS
 #include <stdbool.h>
 #include <time.h>
+#include <pthread.h>
+#include <errno.h>
+#include <string.h>
+#include <math.h>
 
+#include "hal/timing.h"
+#include "hal/sampler.h"
+#include "hal/SPI.h"
+#include "hal/periodTimer.h"
 void Sampler_init(void){
 
 }
@@ -41,5 +48,5 @@ double Sampler_getAverageReading(void){
 
 // Get the total number of light level samples taken so far.
 long long Sampler_getNumSamplesTaken(void){
-    
+
 }

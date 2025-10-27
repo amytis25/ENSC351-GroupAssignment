@@ -14,6 +14,20 @@
 #ifndef _SAMPLER_H_
 #define _SAMPLER_H_
 
+#include <stdio.h> // fopen, fprintf, fclose, perror
+#include <stdlib.h>  // exit, EXIT_FAILURE, EXIT_SUCCESS
+#include <stdbool.h>
+#include <time.h>
+#include <pthread.h>
+#include <errno.h>
+#include <string.h>
+#include <math.h>
+
+#include "hal/timing.h"
+#include "hal/sampler.h"
+#include "hal/SPI.h"
+#include "hal/periodTimer.h"
+
 // Begin/end the background thread which samples light levels.
 void Sampler_init(void);
 
