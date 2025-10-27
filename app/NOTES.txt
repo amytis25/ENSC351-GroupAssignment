@@ -3,3 +3,5 @@ ROTARY ENCODER:
 select - GPIO6
 output A - GPIO5
 output B - GPIO11 
+
+noworky should be fixed but needs testing 
