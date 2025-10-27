@@ -124,6 +124,7 @@ long long Sampler_getNumSamplesTaken(void){
     pthread_mutex_unlock(&lock);
     return val;
 }
+
 // Sampler thread function
 // Continuously samples light levels and stores them.
 static void* samplerThread(void){
