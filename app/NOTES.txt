@@ -1,0 +1,5 @@
+LED (PWM) is connected on GPIO 15
+ROTARY ENCODER:
+select - GPIO6
+output A - GPIO5
+output B - GPIO11 
