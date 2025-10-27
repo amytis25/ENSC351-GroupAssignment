@@ -5,6 +5,7 @@
 #include "hal/timing.h"
 #include "hal/PWM.h"
 
+#define NANOSECONDS_IN_SECOND 1000000000
 
 // PWM helper Functions
 bool PWM_setDutyCycle(int dutyCycle){
@@ -38,7 +39,7 @@ bool PWM_setFrequency(int Hz, int dutyCyclePercent){
         fprintf(stderr, "PWM_setFrequency: invalid duty cycle percentage\n");
         return false;
     }
-    int period = 1000000000 / Hz; // period in nanoseconds
+    int period = NANOSECONDS_IN_SECOND / Hz; // period in nanoseconds
     int dutyCycle = period * (dutyCyclePercent / 100); // duty cycle in nanoseconds
     return PWM_setPeriod(period) && PWM_setDutyCycle(dutyCycle);
 }
