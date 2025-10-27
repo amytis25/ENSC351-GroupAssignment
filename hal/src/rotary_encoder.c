@@ -1,6 +1,7 @@
-// hal/rotary.c
+// This program reads input of the rotary encoder from GPIO
+// rotary_encoder.c
 #define _GNU_SOURCE
-#include "rotary.h"
+#include "hal/rotary_encoder.h"
 
 #include <gpiod.h>
 #include <pthread.h>
