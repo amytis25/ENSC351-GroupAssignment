@@ -54,4 +54,8 @@ double Sampler_getAverageReading(void);
 // Get the total number of light level samples taken so far.
 long long Sampler_getNumSamplesTaken(void);
 
+// Sampler thread function
+// Continuously samples light levels and stores them.
+static void* samplerThread(void);
+
 #endif
