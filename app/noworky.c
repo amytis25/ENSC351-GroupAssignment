@@ -4,6 +4,8 @@
  * This program tries to create two arrays of data, and then swap their
  * contents. However, not all seems to go according to plan...
  */
+
+ /* Changed line 29, error of underflowing. changed from unsigned to signed int*/
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -24,7 +26,7 @@ void swapContent(double *d1, double *d2)
  */
 void tradeArrays(double *array1, double *array2, int size)
 {
-	unsigned int i;
+	int i; // Changed from unsigned int to int
 	for (i = size-1; i >= 0; i--) {
 		swapContent(array1+i, array2+i);
 	}
