@@ -19,6 +19,6 @@ static int read_ch(int fd, int ch, uint32_t speed_hz);
 
 
 // read and return normalized joystick x and y values
-int Read_ADC_Values(void);
+int Read_ADC_Values(int channel);
 
 #endif

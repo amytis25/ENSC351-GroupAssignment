@@ -23,12 +23,15 @@
 #include "hal/sampler.h"
 #include "hal/SPI.h"
 #include "hal/periodTimer.h"
+#include "hal/PWM.h"
 #include <stdio.h> // fopen, fprintf, fclose, perror
 #include <stdlib.h>  // exit, EXIT_FAILURE, EXIT_SUCCESS
 #include <stdbool.h>
 #include <time.h>
 
 int main() {
-
-    return 0;
+       printf("Starting light_sampler application...\n");
+       PWM_setFrequency(1, 50); // Set initial frequency to 1 Hz with 50% duty cycle
+       PWM_enable();
+       return 0;
 }

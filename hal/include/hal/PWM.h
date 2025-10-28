@@ -6,9 +6,9 @@
 #include <time.h>
 
 
-#define PWM_DUTY_CYCLE_FILE "/dev/hat/pwm/GPIO12/duty_cycle"
-#define PWM_PERIOD_FILE "/dev/hat/pwm/GPIO12/period"
-#define PWM_ENABLE_FILE "/dev/hat/pwm/GPIO12/enable"
+#define PWM_DUTY_CYCLE_FILE "/dev/hat/pwm/GPIO15/duty_cycle"
+#define PWM_PERIOD_FILE "/dev/hat/pwm/GPIO15/period"
+#define PWM_ENABLE_FILE "/dev/hat/pwm/GPIO15/enable"
 
 
 // PWM helper Functions
