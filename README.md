@@ -1,2 +1,0 @@
-# ENSC351-GroupAssignment
-
