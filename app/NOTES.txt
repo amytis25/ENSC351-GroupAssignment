@@ -1,7 +1,10 @@
 LED (PWM) is connected on GPIO 15
+Sensor is connected via SPI - using ch0 - GPIO4
+
 ROTARY ENCODER:
-select - GPIO6
+select - not used
 output A - GPIO5
-output B - GPIO11 
+output B - GPIO6 
+GND (for everything) hat-39 
 
 noworky should be fixed but needs testing 
