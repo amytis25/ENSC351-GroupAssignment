@@ -1,0 +1,459 @@
+melissa@beagle:~$ ^[[200~ls /dev/spidev*~
+Could not find command-not-found database. Run 'sudo apt update' to populate it.
+ls: command not found
+melissa@beagle:~$ ls /dev/spidev*~
+ls: cannot access '/dev/spidev*~': No such file or directory
+melissa@beagle:~$ sudo ls /dev/spidev*~
+ls: cannot access '/dev/spidev*~': No such file or directory
+melissa@beagle:~$ ls /dev/
+autofs         kvm           stdin     tty32  tty60        vcs6
+block          log           stdout    tty33  tty61        vcs7
+bone           loop-control  tee0      tty34  tty62        vcsa
+btrfs-control  mapper        teepriv0  tty35  tty63        vcsa1
+bus            mem           tty       tty36  tty7         vcsa2
+cachefiles     mmcblk1       tty0      tty37  tty8         vcsa3
+char           mmcblk1p1     tty1      tty38  tty9         vcsa4
+console        mmcblk1p2     tty10     tty39  ttyAMA0      vcsa5
+core           mmcblk1p3     tty11     tty4   ttyGS0       vcsa6
+cuse           mqueue        tty12     tty40  ttyS0        vcsa7
+disk           net           tty13     tty41  ttyS1        vcsu
+dma_heap       null          tty14     tty42  ttyS2        vcsu1
+dri            port          tty15     tty43  ttyS3        vcsu2
+fd             ppp           tty16     tty44  ttyS4        vcsu3
+ffs-mtp        ptmx          tty17     tty45  ttyS5        vcsu4
+full           ptp0          tty18     tty46  ttyS7        vcsu5
+fuse           pts           tty19     tty47  ttyS8        vcsu6
+gpiochip0      random        tty2      tty48  ttyS9        vcsu7
+gpiochip1      remoteproc    tty20     tty49  ubi_ctrl     vfio
+gpiochip2      rfkill        tty21     tty5   udmabuf      vga_arbiter
+hat            rpmsg0        tty22     tty50  uhid         vhost-net
+hugepages      rpmsg_ctrl0   tty23     tty51  uinput       vhost-vsock
+hwrng          rtc           tty24     tty52  urandom      video0
+i2c-1          rtc0          tty25     tty53  userfaultfd  watchdog
+i2c-2          rtc1          tty26     tty54  v4l          watchdog0
+i2c-3          shm           tty27     tty55  vcs          watchdog1
+i2c-4          snapshot      tty28     tty56  vcs1         watchdog2
+i2c-5          snd           tty29     tty57  vcs2         watchdog3
+initctl        spidev0.0     tty3      tty58  vcs3         watchdog4
+input          spidev0.1     tty30     tty59  vcs4         zero
+kmsg           stderr        tty31     tty6   vcs5
+melissa@beagle:~$ sudo ls /dev/spidev0.0
+/dev/spidev0.0
+melissa@beagle:~$ sudo ls /dev/spidev0.1
+/dev/spidev0.1
+melissa@beagle:~$ spidev_test -D /dev/spidev1.0 -s 1000000 -p $'\x06\x00\x00'
+Could not find command-not-found database. Run 'sudo apt update' to populate it.
+spidev_test: command not found
+melissa@beagle:~$ sudo apt update
+sudo apt install spi-tools
+Ign:1 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease
+Ign:2 http://deb.debian.org/debian trixie InRelease                     
+Ign:3 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease             
+Ign:5 http://security.debian.org/debian-security trixie-security InRelease
+Ign:6 https://packages.mozilla.org/apt mozilla InRelease
+Ign:3 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+Ign:1 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease 
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease         
+Ign:5 http://security.debian.org/debian-security trixie-security InRelease
+Ign:2 http://deb.debian.org/debian trixie InRelease
+Ign:6 https://packages.mozilla.org/apt mozilla InRelease
+Ign:3 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+Ign:1 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease
+Ign:5 http://security.debian.org/debian-security trixie-security InRelease
+Ign:2 http://deb.debian.org/debian trixie InRelease
+Ign:6 https://packages.mozilla.org/apt mozilla InRelease
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease
+Err:3 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+  Temporary failure resolving 'debian.beagleboard.org'
+Err:1 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease 
+  Temporary failure resolving 'rcn-ee.com'
+Err:5 http://security.debian.org/debian-security trixie-security InRelease
+  Temporary failure resolving 'security.debian.org'
+Err:6 https://packages.mozilla.org/apt mozilla InRelease
+  Temporary failure resolving 'packages.mozilla.org'
+Err:4 http://deb.debian.org/debian trixie-updates InRelease
+  Temporary failure resolving 'deb.debian.org'
+Err:2 http://deb.debian.org/debian trixie InRelease
+  Temporary failure resolving 'deb.debian.org'
+All packages are up to date.    
+Warning: Failed to fetch http://deb.debian.org/debian/dists/trixie/InRelease  Temporary failure resolving 'deb.debian.org'
+Warning: Failed to fetch http://security.debian.org/debian-security/dists/trixie-security/InRelease  Temporary failure resolving 'security.debian.org'
+Warning: Failed to fetch http://deb.debian.org/debian/dists/trixie-updates/InRelease  Temporary failure resolving 'deb.debian.org'
+Warning: Failed to fetch https://debian.beagleboard.org/debian-trixie-arm64/dists/trixie/InRelease  Temporary failure resolving 'debian.beagleboard.org'
+Warning: Failed to fetch https://rcn-ee.com/repos/debian-trixie-arm64/dists/trixie/InRelease  Temporary failure resolving 'rcn-ee.com'
+Warning: Failed to fetch https://packages.mozilla.org/apt/dists/mozilla/InRelease  Temporary failure resolving 'packages.mozilla.org'
+Warning: Some index files failed to download. They have been ignored, or old ones used instead.
+Installing:                     
+  spi-tools
+
+Summary:
+  Upgrading: 0, Installing: 1, Removing: 0, Not Upgrading: 0
+  Download size: 9,472 B
+  Space needed: 154 kB / 20.7 GB available
+
+Ign:1 http://deb.debian.org/debian trixie/main arm64 spi-tools arm64 0.8.4-1+b1
+Ign:1 http://deb.debian.org/debian trixie/main arm64 spi-tools arm64 0.8.4-1+b1
+Ign:1 http://deb.debian.org/debian trixie/main arm64 spi-tools arm64 0.8.4-1+b1
+Err:1 http://deb.debian.org/debian trixie/main arm64 spi-tools arm64 0.8.4-1+b1
+  Temporary failure resolving 'deb.debian.org'
+Error: Failed to fetch http://deb.debian.org/debian/pool/main/s/spi-tools/spi-tools_0.8.4-1%2bb1_arm64.deb  Temporary failure resolving 'deb.debian.org'
+Error: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+melissa@beagle:~$ which spidev_test
+melissa@beagle:~$ which spidev_test
+melissa@beagle:~$ sudo apt install linux-tools-$(uname -r)
+Error: Unable to locate package linux-tools-6.1.83-ti-arm64-r72
+Error: Couldn't find any package by glob 'linux-tools-6.1.83-ti-arm64-r72'
+melissa@beagle:~$ nano read_spi.py
+melissa@beagle:~$ sudo apt update
+sudo apt install python3-pip
+pip3 install spidev
+Ign:1 http://deb.debian.org/debian trixie InRelease
+Ign:2 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+Ign:3 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease
+Ign:5 https://packages.mozilla.org/apt mozilla InRelease
+Ign:6 http://security.debian.org/debian-security trixie-security InRelease
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease                    
+Ign:2 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease      
+Ign:3 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease            
+Ign:1 http://deb.debian.org/debian trixie InRelease                            
+Ign:5 https://packages.mozilla.org/apt mozilla InRelease
+Ign:6 http://security.debian.org/debian-security trixie-security InRelease
+Ign:1 http://deb.debian.org/debian trixie InRelease                            
+Ign:2 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease      
+Ign:3 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease            
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease                    
+Ign:5 https://packages.mozilla.org/apt mozilla InRelease
+Ign:6 http://security.debian.org/debian-security trixie-security InRelease
+Err:4 http://deb.debian.org/debian trixie-updates InRelease                    
+  Temporary failure resolving 'deb.debian.org'
+Err:2 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease      
+  Temporary failure resolving 'debian.beagleboard.org'
+Err:3 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease            
+  Temporary failure resolving 'rcn-ee.com'
+Err:1 http://deb.debian.org/debian trixie InRelease                            
+  Temporary failure resolving 'deb.debian.org'
+Err:5 https://packages.mozilla.org/apt mozilla InRelease
+  Temporary failure resolving 'packages.mozilla.org'
+Err:6 http://security.debian.org/debian-security trixie-security InRelease
+  Temporary failure resolving 'security.debian.org'
+All packages are up to date.          
+Warning: Failed to fetch http://deb.debian.org/debian/dists/trixie/InRelease  Temporary failure resolving 'deb.debian.org'
+Warning: Failed to fetch http://security.debian.org/debian-security/dists/trixie-security/InRelease  Temporary failure resolving 'security.debian.org'
+Warning: Failed to fetch http://deb.debian.org/debian/dists/trixie-updates/InRelease  Temporary failure resolving 'deb.debian.org'
+Warning: Failed to fetch https://debian.beagleboard.org/debian-trixie-arm64/dists/trixie/InRelease  Temporary failure resolving 'debian.beagleboard.org'
+Warning: Failed to fetch https://rcn-ee.com/repos/debian-trixie-arm64/dists/trixie/InRelease  Temporary failure resolving 'rcn-ee.com'
+Warning: Failed to fetch https://packages.mozilla.org/apt/dists/mozilla/InRelease  Temporary failure resolving 'packages.mozilla.org'
+Warning: Some index files failed to download. They have been ignored, or old ones used instead.
+python3-pip is already the newest version (25.1.1+dfsg-1).
+Summary:
+  Upgrading: 0, Installing: 0, Removing: 0, Not Upgrading: 0
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+    
+    If you wish to install a non-Debian-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+    
+    If you wish to install a non-Debian packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+    
+    See /usr/share/doc/python3.13/README.venv for more information.
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+melissa@beagle:~$ python3 read_spi.py
+Traceback (most recent call last):
+  File "/home/melissa/read_spi.py", line 1, in <module>
+    import spidev, time
+ModuleNotFoundError: No module named 'spidev'
+melissa@beagle:~$ pip3 install spidev
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+    
+    If you wish to install a non-Debian-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+    
+    If you wish to install a non-Debian packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+    
+    See /usr/share/doc/python3.13/README.venv for more information.
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+melissa@beagle:~$ apt install python3-spidev
+Error: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)
+Error: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), are you root?
+melissa@beagle:~$ sudo apt install python3-spidev
+Installing:                     
+  python3-spidev
+
+Summary:
+  Upgrading: 0, Installing: 1, Removing: 0, Not Upgrading: 0
+  Download size: 14.4 kB
+  Space needed: 95.2 kB / 20.7 GB available
+
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Err:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+  Temporary failure resolving 'deb.debian.org'
+Error: Failed to fetch http://deb.debian.org/debian/pool/main/s/spidev/python3-spidev_3.6-1%2bb6_arm64.deb  Temporary failure resolving 'deb.debian.org'
+Error: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+melissa@beagle:~$ apt-get update
+Reading package lists... Done
+E: Could not open lock file /var/lib/apt/lists/lock - open (13: Permission denied)
+E: Unable to lock directory /var/lib/apt/lists/
+W: Problem unlinking the file /var/cache/apt/pkgcache.bin - RemoveCaches (13: Permission denied)
+W: Problem unlinking the file /var/cache/apt/srcpkgcache.bin - RemoveCaches (13: Permission denied)
+melissa@beagle:~$ sudo apt-get update
+Ign:1 http://deb.debian.org/debian trixie InRelease
+Ign:2 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+Ign:3 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease
+Ign:5 https://packages.mozilla.org/apt mozilla InRelease
+Ign:6 http://security.debian.org/debian-security trixie-security InRelease
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease
+Ign:2 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+Ign:3 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease
+Ign:5 https://packages.mozilla.org/apt mozilla InRelease
+Ign:1 http://deb.debian.org/debian trixie InRelease
+Ign:6 http://security.debian.org/debian-security trixie-security InRelease
+Ign:1 http://deb.debian.org/debian trixie InRelease
+Ign:2 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+Ign:3 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease
+Ign:5 https://packages.mozilla.org/apt mozilla InRelease
+Ign:4 http://deb.debian.org/debian trixie-updates InRelease
+Ign:6 http://security.debian.org/debian-security trixie-security InRelease
+Err:2 https://debian.beagleboard.org/debian-trixie-arm64 trixie InRelease
+  Temporary failure resolving 'debian.beagleboard.org'
+Err:3 https://rcn-ee.com/repos/debian-trixie-arm64 trixie InRelease
+  Temporary failure resolving 'rcn-ee.com'
+Err:5 https://packages.mozilla.org/apt mozilla InRelease
+  Temporary failure resolving 'packages.mozilla.org'
+Err:4 http://deb.debian.org/debian trixie-updates InRelease
+  Temporary failure resolving 'deb.debian.org'
+Err:6 http://security.debian.org/debian-security trixie-security InRelease
+  Temporary failure resolving 'security.debian.org'
+Err:1 http://deb.debian.org/debian trixie InRelease
+  Temporary failure resolving 'deb.debian.org'
+Reading package lists... Done
+W: Failed to fetch http://deb.debian.org/debian/dists/trixie/InRelease  Temporary failure resolving 'deb.debian.org'
+W: Failed to fetch http://security.debian.org/debian-security/dists/trixie-security/InRelease  Temporary failure resolving 'security.debian.org'
+W: Failed to fetch http://deb.debian.org/debian/dists/trixie-updates/InRelease  Temporary failure resolving 'deb.debian.org'
+W: Failed to fetch https://debian.beagleboard.org/debian-trixie-arm64/dists/trixie/InRelease  Temporary failure resolving 'debian.beagleboard.org'
+W: Failed to fetch https://rcn-ee.com/repos/debian-trixie-arm64/dists/trixie/InRelease  Temporary failure resolving 'rcn-ee.com'
+W: Failed to fetch https://packages.mozilla.org/apt/dists/mozilla/InRelease  Temporary failure resolving 'packages.mozilla.org'
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+melissa@beagle:~$ sudo apt install python3-spidev
+Installing:                     
+  python3-spidev
+
+Summary:
+  Upgrading: 0, Installing: 1, Removing: 0, Not Upgrading: 0
+  Download size: 14.4 kB
+  Space needed: 95.2 kB / 20.7 GB available
+
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Err:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+  Temporary failure resolving 'deb.debian.org'
+Error: Failed to fetch http://deb.debian.org/debian/pool/main/s/spidev/python3-spidev_3.6-1%2bb6_arm64.deb  Temporary failure resolving 'deb.debian.org'
+Error: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+melissa@beagle:~$ --fix-missing
+Could not find command-not-found database. Run 'sudo apt update' to populate it.
+--fix-missing: command not found
+melissa@beagle:~$ sudo apt install python3-spidev --fix-missing
+Installing:                     
+  python3-spidev
+
+Summary:
+  Upgrading: 0, Installing: 1, Removing: 0, Not Upgrading: 0
+  Download size: 14.4 kB
+  Space needed: 95.2 kB / 20.7 GB available
+
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Ign:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+Err:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6
+  Temporary failure resolving 'deb.debian.org'
+Error: Failed to fetch http://deb.debian.org/debian/pool/main/s/spidev/python3-spidev_3.6-1%2bb6_arm64.deb  Temporary failure resolving 'deb.debian.org'
+Error: Internal Error, ordering was unable to handle the media swap
+melissa@beagle:~$ ./internetToTarget
+-bash: ./internetToTarget: No such file or directory
+melissa@beagle:~$ ls
+Desktop    duty_cycle    internetToTarget.sh  Music     Public          rotary_test.c     spidev_test    v2.c
+Documents  enable        mountNFS.sh          period    reaction_timer  rotary_test_v2    spidev_text.c  Videos
+Downloads  hostname.bak  mount.sh             Pictures  read_spi.py     rotary_test_v2.c  Templates
+melissa@beagle:~$ ./internetToTarget.sh
+melissa@beagle:~$ ping google.ca
+PING google.ca (142.250.217.99) 56(84) bytes of data.
+64 bytes from sea09s30-in-f3.1e100.net (142.250.217.99): icmp_seq=1 ttl=127 time=21.5 ms
+64 bytes from sea09s30-in-f3.1e100.net (142.250.217.99): icmp_seq=2 ttl=127 time=23.7 ms
+^C
+--- google.ca ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 21.505/22.591/23.677/1.086 ms
+melissa@beagle:~$ sudo apt install python3-spidev
+Installing:                     
+  python3-spidev
+
+Summary:
+  Upgrading: 0, Installing: 1, Removing: 0, Not Upgrading: 0
+  Download size: 14.4 kB
+  Space needed: 95.2 kB / 20.7 GB available
+
+Get:1 http://deb.debian.org/debian trixie/main arm64 python3-spidev arm64 3.6-1+b6 [14.4 kB]
+Fetched 14.4 kB in 1s (21.5 kB/s)          
+Selecting previously unselected package python3-spidev.
+(Reading database ... 93917 files and directories currently installed.)
+Preparing to unpack .../python3-spidev_3.6-1+b6_arm64.deb ...
+Unpacking python3-spidev (3.6-1+b6) ...
+Setting up python3-spidev (3.6-1+b6) ...
+Scanning processes...                                                                                                
+Scanning processor microcode...                                                                                      
+Scanning linux images...                                                                                             
+
+Running kernel seems to be up-to-date.
+
+Failed to check for processor microcode upgrades.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+melissa@beagle:~$ sudo apt install python3-spidev --fix-missing
+[sudo] password for melissa: 
+python3-spidev is already the newest version (3.6-1+b6).
+^[[A^[[A^[[A^[[A^[[ASummary:
+  Upgrading: 0, Installing: 0, Removing: 0, Not Upgrading: 0
+melissa@beagle:~$ python3 read_spi.py
+Traceback (most recent call last):
+  File "/home/melissa/read_spi.py", line 4, in <module>
+    spi.open(1, 0)          # /dev/spidev1.0 → bus 1, CS0
+    ~~~~~~~~^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory
+melissa@beagle:~$ pip3 install spidev
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+    
+    If you wish to install a non-Debian-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+    
+    If you wish to install a non-Debian packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+    
+    See /usr/share/doc/python3.13/README.venv for more information.
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+melissa@beagle:~$ sudo apt install linux-tools-$(uname -r)
+Error: Unable to locate package linux-tools-6.1.83-ti-arm64-r72
+Error: Couldn't find any package by glob 'linux-tools-6.1.83-ti-arm64-r72'
+melissa@beagle:~$ sudo apt install spi-tools
+Installing:                     
+  spi-tools
+
+Summary:
+  Upgrading: 0, Installing: 1, Removing: 0, Not Upgrading: 0
+  Download size: 9,472 B
+  Space needed: 154 kB / 20.7 GB available
+
+Get:1 http://deb.debian.org/debian trixie/main arm64 spi-tools arm64 0.8.4-1+b1 [9,472 B]
+Fetched 9,472 B in 1s (15.3 kB/s)    
+Selecting previously unselected package spi-tools.
+(Reading database ... 93928 files and directories currently installed.)
+Preparing to unpack .../spi-tools_0.8.4-1+b1_arm64.deb ...
+Unpacking spi-tools (0.8.4-1+b1) ...
+Setting up spi-tools (0.8.4-1+b1) ...
+Processing triggers for man-db (2.13.1-1) ...
+Scanning processes...                                                                                                
+Scanning processor microcode...                                                                                      
+Scanning linux images...                                                                                             
+
+Running kernel seems to be up-to-date.
+
+Failed to check for processor microcode upgrades.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+melissa@beagle:~$ spidev_test -D /dev/spidev1.0 -s 1000000 -p $'\x06\x00\x00'
+Could not find command-not-found database. Run 'sudo apt update' to populate it.
+spidev_test: command not found
+melissa@beagle:~$ which spidev
+melissa@beagle:~$ python3 read_spi.py
+Traceback (most recent call last):
+  File "/home/melissa/read_spi.py", line 4, in <module>
+    spi.open(1, 0)          # /dev/spidev1.0 → bus 1, CS0
+    ~~~~~~~~^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory
+melissa@beagle:~$ ls /dev/spidev*
+/dev/spidev0.0  /dev/spidev0.1
+melissa@beagle:~$ sudo nano /boot/firmware/extlinux/extlinux.conf
+melissa@beagle:~$ # What SPI nodes exist now?
+ls -l /dev/spidev*
+
+# Which overlays are actually loaded?
+ls -1 /proc/device-tree/chosen/overlays
+
+# Kernel messages about SPI & PWM:
+dmesg | egrep -i 'spi|spidev|pwm|epwm'
+crw------- 1 root root 153, 1 Oct 26 21:16 /dev/spidev0.0
+crw------- 1 root root 153, 0 Oct 26 21:16 /dev/spidev0.1
+gpio15.23000000.pwm
+hat-10.23000000.pwm
+k3-am67a-beagley-ai-pwm-epwm0-gpio15.kernel
+k3-am67a-beagley-ai-spidev0.kernel
+name
+[    0.000000] GICv3: 256 SPIs implemented
+[    0.000000] GICv3: 0 Extended SPIs implemented
+[    1.095917] SPI driver tps6594 has no spi_device_id for ti,tps6594-q1
+[    1.095931] SPI driver tps6594 has no spi_device_id for ti,tps6593-q1
+[    1.095934] SPI driver tps6594 has no spi_device_id for ti,lp8764-q1
+[   14.535239] Modules linked in: rpmsg_ctrl rpmsg_char cc33xx mac80211 libarc4 algif_aead spidev crct10dif_ce snd_soc_simple_card snd_soc_simple_card_utils pci_endpoint_test e5010_jpeg_enc cc33xx_sdio cpufreq_dt cfg80211 pvrsrvkm(O) pwm_fan rti_wdt at24 ti_k3_r5_remoteproc btti_uart bluetooth snd_soc_davinci_mcasp wave5 snd_soc_ti_udma videobuf2_dma_contig snd_soc_ti_edma snd_soc_hdmi_codec snd_soc_ti_sdma v4l2_mem2mem videobuf2_memops snd_soc_core ti_k3_dsp_remoteproc snd_pcm_dmaengine ti_k3_common snd_pcm videobuf2_v4l2 videobuf2_common videodev snd_timer mc snd omap_mailbox optee_rng efi_pstore nfnetlink
+[   14.539775] Modules linked in: rpmsg_ctrl rpmsg_char cc33xx mac80211 libarc4 algif_aead spidev crct10dif_ce snd_soc_simple_card snd_soc_simple_card_utils pci_endpoint_test e5010_jpeg_enc cc33xx_sdio cpufreq_dt cfg80211 pvrsrvkm(O) pwm_fan rti_wdt at24 ti_k3_r5_remoteproc btti_uart bluetooth snd_soc_davinci_mcasp wave5 snd_soc_ti_udma videobuf2_dma_contig snd_soc_ti_edma snd_soc_hdmi_codec snd_soc_ti_sdma v4l2_mem2mem videobuf2_memops snd_soc_core ti_k3_dsp_remoteproc snd_pcm_dmaengine ti_k3_common snd_pcm videobuf2_v4l2 videobuf2_common videodev snd_timer mc snd omap_mailbox optee_rng efi_pstore nfnetlink
+melissa@beagle:~$ sudo nano read_spi.py
+melissa@beagle:~$ python3 read_spi.py
+Traceback (most recent call last):
+  File "/home/melissa/read_spi.py", line 4, in <module>
+    spi.open(0, 0)          # /dev/spidev1.0 → bus 1, CS0
+    ~~~~~~~~^^^^^^
+PermissionError: [Errno 13] Permission denied
+melissa@beagle:~$ sudo python3 read_spi.py
+^CTraceback (most recent call last):
+  File "/home/melissa/read_spi.py", line 19, in <module>
+    time.sleep(0.1)
+    ~~~~~~~~~~^^^^^
+KeyboardInterrupt
+
+melissa@beagle:~$ 
