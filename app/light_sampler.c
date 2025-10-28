@@ -4,7 +4,7 @@
 
 /* 
  - Use the light sensor to read current light level.
-        - doing with SPI.c
+        - doing with SPI.c. sampler.c??????
  - Compute and print out the number of dips in the light intensity seen in the previous second.
         - another func for this (?) light_dip_detector.c
  - Use the rotary encoder to control how fast the LED blinks (using PWM). This LED emitter
