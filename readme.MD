@@ -16,8 +16,8 @@
 
 - ROTARY ENCODER:
     - select - not used
-    - output A - GPIO5
-    - output B - GPIO6 
+    - output A - GPIO5 gpiochip2 15
+    - output B - GPIO6 gpiochip2 17
 
 
 ## Manually Running CMake
