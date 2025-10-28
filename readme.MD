@@ -11,8 +11,8 @@
 
 ## BEAGLE-Y-AI PIN CONNECTIONS 
 
-- LED (PWM) is connected on GPIO 15
-- Photoresistor Sensor is connected via SPI - using ch0 - GPIO4
+- LED (PWM) is connected on GPIO 15 gpiochip2 13
+- Photoresistor Sensor is connected via SPI - using ch0 - GPIO4 gpiochip1 38
 
 - ROTARY ENCODER:
     - select - not used
