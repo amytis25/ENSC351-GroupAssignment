@@ -1,7 +1,7 @@
 // SPI.c
 // ENSC 351 Fall 2025
 // SPI functions for BeagleY-AI
-// For reading photoresistor from MCP3202 ADC via SPI
+// For reading photoresistor from CH0 MCP3202 ADC 
 
 #include "hal/led.h"
 #include "hal/timing.h"
@@ -12,7 +12,6 @@
 #include <time.h>
 
 // from SPI guide
-// at center ch0 (x) = 2048, ch1 (y) = 2048
 static int read_ch(int fd, int ch, uint32_t speed_hz) {
     // fd is the file descriptor for the SPI device
     // ch is the channel number on the ADC
