@@ -5,19 +5,19 @@ include_directories(include)
 file(GLOB MY_SOURCES "*.c")
 
 # Create the Light Dip Detector executable
-add_executable(Light_Dip_Detector ${MY_SOURCES})
+add_executable(light_sampler ${MY_SOURCES})
 
 # Link with the HAL library
-target_link_libraries(Light_Dip_Detector LINK_PRIVATE hal)
+target_link_libraries(light_sampler LINK_PRIVATE hal)
 
 # Link additional libraries needed for timing and math functions
-target_link_libraries(Light_Dip_Detector LINK_PRIVATE rt m)
+target_link_libraries(light_sampler LINK_PRIVATE rt m)
 
 # Copy executable to final location for deployment
-add_custom_command(TARGET Light_Dip_Detector POST_BUILD
+add_custom_command(TARGET light_sampler POST_BUILD
   COMMAND "${CMAKE_COMMAND}" -E copy
-     "$<TARGET_FILE:Light_Dip_Detector>"
-     "~/ensc351/public/as2/Light_Dip_Detector"
+     "$<TARGET_FILE:light_sampler>"
+     "~/ensc351/public/as2/light_sampler"
   COMMENT "Copying ARM executable to public NFS directory")
 
 
