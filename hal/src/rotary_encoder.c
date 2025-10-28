@@ -1,216 +1,207 @@
-// This program reads input of the rotary encoder from GPIO
-// rotary_encoder.c
+// hal/rotary_encoder.c
 #define _GNU_SOURCE
 #include "hal/rotary_encoder.h"
 
 #include <gpiod.h>
 #include <pthread.h>
-#include <poll.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include <stdatomic.h>
 #include <time.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
+#include "periodTimer.h"  // <-- we will mark steps here
+
+// ====== Configure polling/debounce ======
+#define SAMPLE_US        500        // poll every 0.5 ms (2 kHz)
+#define DEBOUNCE_US      800        // must be stable this long to accept a change
+#define STABLE_SAMPLES   (DEBOUNCE_US / SAMPLE_US)
+
+// ====== Internal state ======
 typedef struct {
     struct gpiod_chip* chip;
     struct gpiod_line* lineA;
     struct gpiod_line* lineB;
-    pthread_t          thread;
-    pthread_mutex_t    mtx;
-    volatile bool      running;
-    int32_t            count;
-    int                lastAB;       // 0..3, last sampled AB state
-    bool               active_low;
-    int                debounce_us;
-    struct timespec    last_ts;      // last processed event time (monotonic)
-} Rotary;
+    bool active_low;
 
-static inline int64_t ts_diff_us(const struct timespec* a, const struct timespec* b)
+    pthread_t thread;
+    atomic_bool running;
+
+    // step counters
+    atomic_long count;        // total steps (CW +, CCW -)
+    atomic_long delta;        // steps since last read
+
+    // debounce & quadrature
+    int last_rawAB;           // 0..3
+    int stableAB;             // debounced state 0..3
+    int stable_ctr;           // stability counter
+
+    // gray-seq accumulation to only count full detents
+    // A typical mechanical encoder produces 4 transitions per detent.
+    // We'll count +1/-1 per full 4-state cycle.
+    int seq_accum;            // +1/-1 steps through the 4-phase; count detent when |accum|==4
+} enc_t;
+
+static enc_t s;
+static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
+
+// ====== Small helpers ======
+static inline int readAB(enc_t* e)
 {
-    int64_t us = (int64_t)(a->tv_sec - b->tv_sec) * 1000000LL;
-    us += (int64_t)(a->tv_nsec - b->tv_nsec) / 1000LL;
-    return us;
+    int a = gpiod_line_get_value(e->lineA);
+    int b = gpiod_line_get_value(e->lineB);
+    if (a < 0 || b < 0) {
+        // Non-fatal: treat as no change
+        return e->stableAB;
+    }
+    if (e->active_low) { a = !a; b = !b; }
+    return (a << 1) | (b & 0x1);
 }
 
-static int read_ab(Rotary* r)
+// Quadrature step table: returns +1 (CW), -1 (CCW), 0 (no move/invalid)
+static inline int qstep(int prev, int curr)
 {
-    int va = gpiod_line_get_value(r->lineA);
-    int vb = gpiod_line_get_value(r->lineB);
-    if (va < 0 || vb < 0) return r->lastAB; // keep prior if read failed
-
-    if (r->active_low) { va = !va; vb = !vb; }
-    return ((va & 1) << 1) | (vb & 1);
-}
-
-// Quadrature state table method:
-// valid transitions: 00->01->11->10->00 (CW) and reverse for CCW.
-// We map (prev<<2)|curr to delta {-1,0,+1}; illegal transitions ignored.
-static int quad_delta(int prev, int curr)
-{
-    static const int8_t table[16] = {
-        // prev<<2 | curr : delta
-        0,  // 0000
-        +1, // 0001 (00->01)
-        -1, // 0010 (00->10)
-        0,  // 0011 (invalid 00->11)
-        -1, // 0100 (01->00)
-        0,  // 0101 (01->01)
-        0,  // 0110 (01->10 invalid)
-        +1, // 0111 (01->11)
-        +1, // 1000 (10->00)
-        0,  // 1001 (10->01 invalid)
-        0,  // 1010 (10->10)
-        -1, // 1011 (10->11)
-        0,  // 1100 (11->00 invalid)
-        -1, // 1101 (11->01)
-        +1, // 1110 (11->10)
-        0   // 1111 (11->11)
+    // valid edges in Gray code: 00->01->11->10->00 (CW) and reverse for CCW
+    static const int table[4][4] = {
+/*prev\curr 00 01 10 11 */
+    /*00*/  { 0, +1, -1,  0 },
+    /*01*/  { -1, 0,  0, +1 },
+    /*10*/  { +1, 0,  0, -1 },
+    /*11*/  { 0, -1, +1,  0 }
     };
-    int idx = ((prev & 0x3) << 2) | (curr & 0x3);
-    return table[idx];
+    return table[prev & 3][curr & 3];
 }
 
-static void* rotary_thread(void* arg)
+static void* reader_thread(void* arg)
 {
-    Rotary* r = (Rotary*)arg;
-    int fdA = gpiod_line_event_get_fd(r->lineA);
-    int fdB = gpiod_line_event_get_fd(r->lineB);
+    (void)arg;
+    enc_t* e = &s;
 
-    struct pollfd pfds[2] = {
-        { .fd = fdA, .events = POLLIN, .revents = 0 },
-        { .fd = fdB, .events = POLLIN, .revents = 0 }
-    };
+    // Initial samples
+    e->last_rawAB = readAB(e);
+    e->stableAB   = e->last_rawAB;
+    e->stable_ctr = 0;
+    e->seq_accum  = 0;
 
-    r->lastAB = read_ab(r);
-    clock_gettime(CLOCK_MONOTONIC, &r->last_ts);
+    while (atomic_load(&e->running)) {
+        int raw = readAB(e);
 
-    while (r->running) {
-        int ret = poll(pfds, 2, 250); // 250 ms timeout to allow clean shutdown
-        if (!r->running) break;
-        if (ret < 0) {
-            if (errno == EINTR) continue;
-            perror("poll");
-            break;
+        // Debounce: require STABLE_SAMPLES consecutive identical raw readings
+        if (raw == e->last_rawAB) {
+            if (e->stable_ctr < STABLE_SAMPLES) e->stable_ctr++;
+        } else {
+            e->stable_ctr = 0;
         }
-        if (ret == 0) continue; // timeout
+        e->last_rawAB = raw;
 
-        // Consume any pending events (A and/or B)
-        struct gpiod_line_event ev;
-        bool got = false;
-        if (pfds[0].revents & POLLIN) {
-            while (gpiod_line_event_read(r->lineA, &ev) == 0) got = true;
-        }
-        if (pfds[1].revents & POLLIN) {
-            while (gpiod_line_event_read(r->lineB, &ev) == 0) got = true;
-        }
-        if (!got) continue;
+        if (e->stable_ctr >= STABLE_SAMPLES) {
+            if (raw != e->stableAB) {
+                // State change accepted; compute quadrature direction
+                int dir = qstep(e->stableAB, raw);
+                e->stableAB = raw;
 
-        struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
+                if (dir != 0) {
+                    e->seq_accum += dir;
 
-        // Debounce (time-based)
-        if (r->debounce_us > 0 && ts_diff_us(&now, &r->last_ts) < r->debounce_us) {
-            continue;
-        }
-        r->last_ts = now;
+                    // Full detent reached? (4 transitions per detent)
+                    if (e->seq_accum >= +4 || e->seq_accum <= -4) {
+                        long step = (e->seq_accum > 0) ? +1 : -1;
+                        atomic_fetch_add(&e->count, step);
+                        atomic_fetch_add(&e->delta, step);
 
-        // Sample both lines and compute delta
-        int curr = read_ab(r);
-        int prev = r->lastAB;
-        if (curr != prev) {
-            int d = quad_delta(prev, curr);
-            if (d != 0) {
-                pthread_mutex_lock(&r->mtx);
-                r->count += d;
-                pthread_mutex_unlock(&r->mtx);
+                        // Tag this detent completion for jitter stats:
+                        Period_markEvent(PERIOD_EVENT_ROTARY_STEP);
+
+                        // keep any overshoot (in case of very fast spinning)
+                        e->seq_accum %= 4;
+                    }
+                }
             }
-            r->lastAB = curr;
         }
+
+        // Sleep
+        struct timespec ts = { .tv_sec = 0, .tv_nsec = SAMPLE_US * 1000 };
+        nanosleep(&ts, NULL);
     }
     return NULL;
 }
 
-Rotary* Rotary_create(const char* chip_name, int line_a_offset, int line_b_offset,
-                      bool active_low, int debounce_us)
+// ====== Public API ======
+bool RotaryEnc_init(const char* gpiochip_path,
+                    unsigned lineA,
+                    unsigned lineB,
+                    bool active_low)
 {
-    Rotary* r = calloc(1, sizeof(*r));
-    if (!r) return NULL;
+    memset(&s, 0, sizeof(s));
+    s.active_low = active_low;
 
-    if (!chip_name) chip_name = "gpiochip0";
-
-    r->chip = gpiod_chip_open_by_name(chip_name);
-    if (!r->chip) { perror("gpiod_chip_open_by_name"); free(r); return NULL; }
-
-    r->lineA = gpiod_chip_get_line(r->chip, line_a_offset);
-    r->lineB = gpiod_chip_get_line(r->chip, line_b_offset);
-    if (!r->lineA || !r->lineB) {
-        perror("gpiod_chip_get_line");
-        gpiod_chip_close(r->chip); free(r); return NULL;
+    s.chip = gpiod_chip_open(gpiochip_path);
+    if (!s.chip) {
+        fprintf(stderr, "RotaryEnc: failed to open chip '%s': %s\n",
+                gpiochip_path, strerror(errno));
+        return false;
     }
 
-    // Request both lines for edge events
-    int flags = active_low ? GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW : 0;
-    if (gpiod_line_request_both_edges_events_flags(r->lineA, "rotaryA", flags) < 0 ||
-        gpiod_line_request_both_edges_events_flags(r->lineB, "rotaryB", flags) < 0) {
-        perror("gpiod_line_request_both_edges_events");
-        if (gpiod_line_is_requested(r->lineA)) gpiod_line_release(r->lineA);
-        if (gpiod_line_is_requested(r->lineB)) gpiod_line_release(r->lineB);
-        gpiod_chip_close(r->chip); free(r); return NULL;
+    s.lineA = gpiod_chip_get_line(s.chip, lineA);
+    s.lineB = gpiod_chip_get_line(s.chip, lineB);
+    if (!s.lineA || !s.lineB) {
+        fprintf(stderr, "RotaryEnc: failed to get lines A=%u B=%u\n", lineA, lineB);
+        RotaryEnc_cleanup();
+        return false;
     }
 
-    pthread_mutex_init(&r->mtx, NULL);
-    r->active_low = active_low;
-    r->debounce_us = debounce_us;
-    r->running = true;
-
-    if (pthread_create(&r->thread, NULL, rotary_thread, r) != 0) {
-        perror("pthread_create");
-        gpiod_line_release(r->lineA);
-        gpiod_line_release(r->lineB);
-        gpiod_chip_close(r->chip);
-        pthread_mutex_destroy(&r->mtx);
-        free(r);
-        return NULL;
+    // Request inputs (best-effort: bias pull-up to reduce chatter)
+#if defined(GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP)
+    int flags = GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP;
+#else
+    int flags = 0;
+#endif
+    if (gpiod_line_request_input_flags(s.lineA, "rotary-A", flags) < 0 ||
+        gpiod_line_request_input_flags(s.lineB, "rotary-B", flags) < 0) {
+        fprintf(stderr, "RotaryEnc: failed to request input lines: %s\n", strerror(errno));
+        RotaryEnc_cleanup();
+        return false;
     }
-    return r;
+
+    atomic_store(&s.count, 0);
+    atomic_store(&s.delta, 0);
+    atomic_store(&s.running, true);
+
+    if (pthread_create(&s.thread, NULL, reader_thread, NULL) != 0) {
+        fprintf(stderr, "RotaryEnc: pthread_create failed\n");
+        RotaryEnc_cleanup();
+        return false;
+    }
+    return true;
 }
 
-void Rotary_destroy(Rotary* r)
+long RotaryEnc_getAndClearDelta(void)
 {
-    if (!r) return;
-    r->running = false;
-    // Nudge the poll by sending a dummy timeout; or close FDs by releasing lines first after join
-    pthread_join(r->thread, NULL);
-
-    if (r->lineA) gpiod_line_release(r->lineA);
-    if (r->lineB) gpiod_line_release(r->lineB);
-    if (r->chip)  gpiod_chip_close(r->chip);
-    pthread_mutex_destroy(&r->mtx);
-    free(r);
+    // atomic exchange
+    return atomic_exchange(&s.delta, 0);
 }
 
-int32_t Rotary_getCount(Rotary* r)
+long RotaryEnc_peekCount(void)
 {
-    if (!r) return 0;
-    pthread_mutex_lock(&r->mtx);
-    int32_t v = r->count;
-    pthread_mutex_unlock(&r->mtx);
-    return v;
+    return atomic_load(&s.count);
 }
 
-void Rotary_setCount(Rotary* r, int32_t value)
+void RotaryEnc_resetCount(long newVal)
 {
-    if (!r) return;
-    pthread_mutex_lock(&r->mtx);
-    r->count = value;
-    pthread_mutex_unlock(&r->mtx);
+    atomic_store(&s.count, newVal);
+    atomic_store(&s.delta, 0);
+    // Note: we do not touch debouncer/seq_accum here
 }
 
-void Rotary_reset(Rotary* r) { Rotary_setCount(r, 0); }
-
-int Rotary_getAB(Rotary* r)
+void RotaryEnc_cleanup(void)
 {
-    if (!r) return -1;
-    return read_ab(r);
+    if (s.chip || s.lineA || s.lineB) {
+        atomic_store(&s.running, false);
+        if (s.thread) { pthread_join(s.thread, NULL); }
+    }
+
+    if (s.lineA) { gpiod_line_release(s.lineA); s.lineA = NULL; }
+    if (s.lineB) { gpiod_line_release(s.lineB); s.lineB = NULL; }
+    if (s.chip)  { gpiod_chip_close(s.chip);    s.chip  = NULL; }
 }
