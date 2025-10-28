@@ -1,7 +1,7 @@
 // SPI.c
 // ENSC 351 Fall 2025
 // SPI functions for BeagleY-AI
-// for reading photoresistor from MCP3202 ADC via SPI
+// For reading photoresistor from MCP3202 ADC via SPI
 
 #include "hal/led.h"
 #include "hal/timing.h"

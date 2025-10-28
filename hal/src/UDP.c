@@ -1,4 +1,4 @@
-// udp_server.c
+// UDP.c
 // UDP command server for ENSC 351 Assignment 2.
 // Build: gcc -Wall -Wextra -O2 -pthread udp_server.c -o udp_demo
 // Run demo: ./udp_demo
