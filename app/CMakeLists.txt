@@ -25,7 +25,7 @@ target_link_libraries(light_sampler LINK_PRIVATE rt m)
 add_custom_command(TARGET light_sampler POST_BUILD
   COMMAND "${CMAKE_COMMAND}" -E copy
      "$<TARGET_FILE:light_sampler>"
-     "~/ensc351/public/as2/light_sampler"
+     "/home/melissa/ENSC351/public/light_sampler"
   COMMENT "Copying ARM executable to public NFS directory")
 
 
