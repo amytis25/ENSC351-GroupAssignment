@@ -50,7 +50,7 @@ int main() {
     // Set initial PWM frequency
     int current_freq = 1;  // Start at 1 Hz
     PWM_setFrequency(current_freq, 50);  // 50% duty cycle
-    
+    long long lastTime = getTimeInMs();
     // Main processing loop
     while (1) {
         // Update LED blink rate based on rotary encoder
@@ -61,34 +61,36 @@ int main() {
             PWM_setFrequency(current_freq, 50);
         }
         
-            
-       // Process light samples every second
-       Sampler_moveCurrentDataToHistory();
-       // Drain period-timer samples for the light-sample event so the
-       // internal timestamp buffer doesn't overflow when sampling at
-       // high rates (Sampler marks an event ~1000Hz). We don't need
-       // the stats here, so discard them.
-       Period_statistics_t _unused_stats;
-       Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &_unused_stats);
-              int history_size;
-              double* samples = Sampler_getHistory(&history_size);
-              if (samples) {
-              int dips = Sampler_getDipCount();
-              double avg = Sampler_getAverageReading();
-              long long total = Sampler_getNumSamplesTaken();
+       long long timeDiff = (getTimeInMs() - lastTime)/1000;
+       if (timeDiff >= 1) {
+            // Process light samples every second
+            Sampler_moveCurrentDataToHistory();
+            // Drain period-timer samples for the light-sample event so the
+            // internal timestamp buffer doesn't overflow when sampling at
+            // high rates (Sampler marks an event ~1000Hz). We don't need
+            // the stats here, so discard them.
+            Period_statistics_t _unused_stats;
+            Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &_unused_stats);
+            int history_size;
+            double* samples = Sampler_getHistory(&history_size);
+            if (samples) {
+            int dips = Sampler_getDipCount();
+            lastTime = getTimeInMs();
+            double avg = Sampler_getAverageReading();
+            long long total = Sampler_getNumSamplesTaken();
               
-              // Print status
-              printf("\nStatus Update! \n in the last seconds:\n");
-              printf("Light dips: %d\n", dips);
-              printf("Average light level: %.2f\n", avg);
-              printf("Total samples: %lld\n", total);
-              printf("LED frequency: %d Hz\n", current_freq);
+            // Print status
+            printf("\n\nStatus Update! \nin the last %lld seconds:\n", timeDiff);
+            printf("Light dips: %d\n", dips);
+            printf("Average light level: %.2f\n", avg);
+            printf("Total samples: %lld\n", total);
+            printf("LED frequency: %d Hz\n\n", current_freq);
               
-              free(samples);
-              }
-
+            free(samples);
+            }
+        }
               // Wait for next second
-              sleepForMs(1000);
+              //sleepForMs(1000);
     }
 
     // Cleanup (never reached in this version, but good practice)

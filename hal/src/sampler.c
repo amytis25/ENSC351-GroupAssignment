@@ -13,6 +13,8 @@
 #include "hal/SPI.h"
 #include "hal/periodTimer.h"
 
+//#define DEBUG
+
 #define SENSOR_CHANNEL 0 // ADC channel for light sensor
 
 #define MAX_SAMPLES_PER_SECOND 1000
@@ -158,8 +160,11 @@ static void* samplerThread(void* arg) {
         // 2) Record timing event
         Period_markEvent(PERIOD_EVENT_SAMPLE_LIGHT);
         pthread_mutex_lock(&lock);
+        #ifdef DEBUG
+        printf("Sampling light level: %.2f V, last reading: %.2f V, average: %.2f V\n", volts, currentSamples[currentSize], avgExp);
+        #endif
 
-        if (volts < avgExp * 0.8 && !firstSample && currentSamples[currentSize] > avgExp) {
+        if (volts < avgExp && !firstSample && currentSamples[currentSize] > avgExp) {
             dipCount++;
         }
 
