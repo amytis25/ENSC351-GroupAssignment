@@ -21,6 +21,9 @@
 static pthread_t samplerThreadId;
 static bool keepRunning = false;
 
+// Thread function declaration
+static void* samplerThread(void* arg);
+
 // Buffers
 static double *currentSamples = NULL;
 static int currentSize = 0;
@@ -127,7 +130,8 @@ long long Sampler_getNumSamplesTaken(void){
 
 // Sampler thread function
 // Continuously samples light levels and stores them.
-static void* samplerThread(void){
+static void* samplerThread(void* arg) {
+    (void)arg;  // Suppress unused parameter warning
 
      while (keepRunning) {
         // 1) Sample ADC

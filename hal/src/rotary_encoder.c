@@ -91,6 +91,7 @@ static atomic_int g_count = 0;   // global rotation count
 // thread function that polls the encoder
 static void* rotary_thread(void* arg)
 {
+    (void)arg;  // Explicitly ignore the unused parameter
     int prev = AB_read();
     if (prev < 0) return NULL;
 

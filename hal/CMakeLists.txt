@@ -3,7 +3,7 @@
 #   Use header as: #include "led.h"
 
 # Option to disable building the rotary encoder HAL (useful for temporary testing)
-option(BUILD_ROTARY_ENCODER "Build rotary encoder HAL module" OFF)
+option(BUILD_ROTARY_ENCODER "Build rotary encoder HAL module" ON)
 option(BUILD_SAMPLER "Build sampler HAL module" OFF)
 
 # Find all source files in the src directory
