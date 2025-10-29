@@ -73,27 +73,33 @@ int main() {
             PWM_setFrequency(current_freq, 50);
         }
 
-        // Process light samples every second
-        Sampler_moveCurrentDataToHistory();
-        int history_size;
-        double* samples = Sampler_getHistory(&history_size);
-        if (samples) {
-            int dips = count_dips(samples, history_size);
-            double avg = Sampler_getAverageReading();
-            long long total = Sampler_getNumSamplesTaken();
-            
-            // Print status
-            printf("\nStatus Update:\n");
-            printf("Light dips in last second: %d\n", dips);
-            printf("Average light level: %.2f\n", avg);
-            printf("Total samples: %lld\n", total);
-            printf("LED frequency: %d Hz\n", current_freq);
-            
-            free(samples);
-        }
+    // Process light samples every second
+       Sampler_moveCurrentDataToHistory();
+       // Drain period-timer samples for the light-sample event so the
+       // internal timestamp buffer doesn't overflow when sampling at
+       // high rates (Sampler marks an event ~1000Hz). We don't need
+       // the stats here, so discard them.
+       Period_statistics_t _unused_stats;
+       Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &_unused_stats);
+              int history_size;
+              double* samples = Sampler_getHistory(&history_size);
+              if (samples) {
+              int dips = count_dips(samples, history_size);
+              double avg = Sampler_getAverageReading();
+              long long total = Sampler_getNumSamplesTaken();
+              
+              // Print status
+              printf("\nStatus Update:\n");
+              printf("Light dips in last second: %d\n", dips);
+              printf("Average light level: %.2f\n", avg);
+              printf("Total samples: %lld\n", total);
+              printf("LED frequency: %d Hz\n", current_freq);
+              
+              free(samples);
+              }
 
-        // Wait for next second
-        sleepForMs(1000);
+              // Wait for next second
+              sleepForMs(1000);
     }
 
     // Cleanup (never reached in this version, but good practice)
