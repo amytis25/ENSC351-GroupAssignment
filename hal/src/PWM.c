@@ -6,7 +6,7 @@
 #include "hal/PWM.h"
 #include <unistd.h>
 
-#define DEBUG 
+//#define DEBUG 
 
 #define NANOSECONDS_IN_SECOND 1000000000
 

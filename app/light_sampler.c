@@ -51,6 +51,7 @@ int main() {
     int current_freq = 1;  // Start at 1 Hz
     PWM_setFrequency(current_freq, 50);  // 50% duty cycle
     long long lastTime = getTimeInMs();
+    long long startTimeS = getTimeInMs();
     // Main processing loop
     while (1) {
         // Update LED blink rate based on rotary encoder
@@ -78,9 +79,10 @@ int main() {
             lastTime = getTimeInMs();
             double avg = Sampler_getAverageReading();
             long long total = Sampler_getNumSamplesTaken();
-              
+            long long currentTimeS = (getTimeInMs()-startTimeS)/1000;
             // Print status
-            printf("\n\nStatus Update! \nin the last %lld seconds:\n", timeDiff);
+            printf("\n\nStatus Update, its been %lld seconds! \n", currentTimeS);
+            printf("In the last %lld seconds:\n", timeDiff);
             printf("Light dips: %d\n", dips);
             printf("Average light level: %.2f\n", avg);
             printf("Total samples: %lld\n", total);

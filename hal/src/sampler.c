@@ -39,6 +39,10 @@ static double avgExp = 0.0;
 static bool firstSample = true;
 
 static int dipCount = 0;
+// last dip time to enforce refractory period (ms)
+static long long lastDipTimeMs = 0;
+// ignore new dips within this many milliseconds after a detected dip
+#define DIP_REFRACTORY_MS 5
 
 // Synchronization
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -148,24 +152,40 @@ int Sampler_getDipCount(void){
 // Continuously samples light levels and stores them.
 static void* samplerThread(void* arg) {
     (void)arg;  // Suppress unused parameter warning
-
+    
      while (keepRunning) {
-        // 1) Sample ADC
-        if (Read_ADC_Values(SENSOR_CHANNEL) < 0) {
+        // 1) Sample ADC (single call)
+        double volts = Read_ADC_Values(SENSOR_CHANNEL);
+        if (volts < 0) {
             perror("samplerThread: failed Read_ADC_Values");
+            // small sleep to avoid busy-looping on persistent error
+            sleepForMs(1);
             continue;
         }
-        double volts = Read_ADC_Values(SENSOR_CHANNEL);
-        
+
         // 2) Record timing event
         Period_markEvent(PERIOD_EVENT_SAMPLE_LIGHT);
         pthread_mutex_lock(&lock);
         #ifdef DEBUG
-        printf("Sampling light level: %.2f V, last reading: %.2f V, average: %.2f V\n", volts, currentSamples[currentSize], avgExp);
+        double last_sample = (currentSize > 0) ? currentSamples[currentSize-1] : volts;
+        printf("Sampling light level: %.2f V, last reading: %.2f V, average: %.2f V\n", volts, last_sample, avgExp);
         #endif
 
-        if (volts < avgExp && !firstSample && currentSamples[currentSize] > avgExp) {
-            dipCount++;
+        // Detect a dip as a transition from above-average to below-average.
+        // Use the previous stored sample (if any) and a time-based refractory
+        // window so that multiple sampled points inside the same physical dip
+        // aren't counted more than once.
+        long long nowMs = getTimeInMs();
+        if (!firstSample) {
+            if (currentSize > 0) {
+                double prev = currentSamples[currentSize-1];
+                if (volts < avgExp && prev > avgExp) {
+                    if (nowMs - lastDipTimeMs > DIP_REFRACTORY_MS) {
+                        dipCount++;
+                        lastDipTimeMs = nowMs;
+                    }
+                }
+            }
         }
 
         // 3) Update exponential average and store sample
