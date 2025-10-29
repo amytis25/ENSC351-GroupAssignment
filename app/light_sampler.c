@@ -30,13 +30,17 @@
 #include <stdbool.h>
 #include <time.h>
 
+#define MS_IN_SECOND 1000
 
 int main() {
     printf("Starting light_sampler application...\n");
 
     // Initialize modules
     Period_init();  // Initialize period timer first
-    PWM_export();
+    if (!PWM_export()) {
+        fprintf(stderr, "Failed to export PWM\n");
+        return -1;
+    }
     
     if (!rotary_init()) {
         fprintf(stderr, "Failed to initialize rotary encoder\n");
@@ -62,7 +66,7 @@ int main() {
             PWM_setFrequency(current_freq, 50);
         }
         
-       long long timeDiff = (getTimeInMs() - lastTime)/1000;
+       long long timeDiff = (getTimeInMs() - lastTime)/MS_IN_SECOND;
        if (timeDiff >= 1) {
             // Process light samples every second
             Sampler_moveCurrentDataToHistory();
@@ -79,7 +83,7 @@ int main() {
             lastTime = getTimeInMs();
             double avg = Sampler_getAverageReading();
             long long total = Sampler_getNumSamplesTaken();
-            long long currentTimeS = (getTimeInMs()-startTimeS)/1000;
+            long long currentTimeS = (getTimeInMs()-startTimeS)/MS_IN_SECOND;
             // Print status
             printf("\n\nStatus Update, its been %lld seconds! \n", currentTimeS);
             printf("In the last %lld seconds:\n", timeDiff);

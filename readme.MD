@@ -29,6 +29,9 @@
         ./buildTarget.sh
     ```
 
+## RUNNING PROVIDED PYTHON SCRIPT
+python3 app/as2UdpGui.py
+
 ## Manually Running CMake
 
 To manually run CMake from the command line use:
