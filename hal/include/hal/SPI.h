@@ -15,7 +15,7 @@
 #define SPI_DEV_PATH "/dev/spidev0.0"
 
 // read a channel from the ADC and return the 12-bit raw value (0..4095)
-static int read_ch(int fd, int ch, uint32_t speed_hz);
+// static int read_ch(int fd, int ch, uint32_t speed_hz);
 
 
 // read and return normalized joystick x and y values
