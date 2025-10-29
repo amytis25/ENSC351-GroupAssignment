@@ -40,6 +40,9 @@ static bool firstSample = true;
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 void Sampler_init(void){
+    // Initialize the period timer first
+    Period_init();
+    
     keepRunning = true;
     currentSamples = malloc(sizeof(double) * MAX_SAMPLE_SIZE);
     if (!currentSamples) {
