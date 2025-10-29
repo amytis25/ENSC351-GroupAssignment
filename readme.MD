@@ -24,14 +24,40 @@
 
 To manually run CMake from the command line use:
 
-```shell
-  # Regenerate build/ folder and makefiles:
-  rm -rf build/         # Wipes temporary build folder
-  cmake -S . -B build   # Generate makefiles in build\
+### Host (build for the machine you're running on)
 
-  # Build (compile & link) the project
-  cmake --build build
-```
+    ```shell
+    # Regenerate build/ folder and makefiles:
+    rm -rf build/         # Wipes temporary build folder
+    cmake -S . -B build   # Generate makefiles in build
+
+    # Build (compile & link) the project
+    cmake --build build
+    ```
+
+### Target (cross-compile for aarch64)
+
+Use one of these minimal options (do this from the repo root). Remove the old `build/` or `build/CMakeCache.txt` before changing compilers.
+
+    Option A — pass compilers directly to CMake:
+
+        ```shell
+        rm -rf build/
+        cmake -S . -B build \
+        -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+        -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++
+        cmake --build build
+        ```
+
+    Option B — set environment variables for a one-shot configure:
+
+        ```shell
+        rm -rf build/
+        CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ cmake -S . -B build
+        cmake --build build
+        ```
+
+
 
 ## NOWORKY.C STATUS 
 
