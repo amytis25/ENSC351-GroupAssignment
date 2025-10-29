@@ -33,3 +33,4 @@ build/
 **/*.c.o.d   # CMake dependency files
 **/compiler_depend.make
 **/compiler_depend.ts
+.vscode/tasks.json

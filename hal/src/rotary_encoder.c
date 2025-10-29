@@ -72,6 +72,19 @@ static int AB_read(void)
     return ((A << 1) | B);   // combine into 2-bit value: AB
 }
 
+// valid edges in Gray code: 00->01->11->10->00 (CW) and reverse for CCW
+static int decode_step(int prev, int curr)
+{
+    static const int table[4][4] = {
+    /*prev\curr 00 01 10 11 */
+    /*00*/  { 0, +1, -1,  0 },
+    /*01*/  { -1, 0,  0, +1 },
+    /*10*/  { +1, 0,  0, -1 },
+    /*11*/  { 0, -1, +1,  0 }
+    };
+    return table[prev & 3][curr & 3];
+}
+
 // ====== chatgpt suggested code ========
 static atomic_int g_count = 0;   // global rotation count
 
@@ -125,19 +138,6 @@ bool GPIO_read(bool *valueA, bool *valueB) {
         return false;
     }
     */
-
-// valid edges in Gray code: 00->01->11->10->00 (CW) and reverse for CCW
-static int decode_step(int prev, int curr) 
-{
-    static const int table[4][4] = {
-    /*prev\curr 00 01 10 11 */
-    /*00*/  { 0, +1, -1,  0 },
-    /*01*/  { -1, 0,  0, +1 },
-    /*10*/  { +1, 0,  0, -1 },
-    /*11*/  { 0, -1, +1,  0 }
-    };
-    return table[prev & 3][curr & 3];
-}
 
 void rotary_close(void) {
     if (line_fd >= 0) { close(line_fd); line_fd = -1; }
