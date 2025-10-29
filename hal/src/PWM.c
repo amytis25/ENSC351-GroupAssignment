@@ -9,33 +9,46 @@
 
 #define NANOSECONDS_IN_SECOND 1000000000
 
-// PWM helper Functions
-bool PWM_setDutyCycle(int dutyCycle){
-    FILE *file = fopen(PWM_DUTY_CYCLE_FILE, "w");
-    #ifdef DEBUG
-    printf("Setting duty cycle to %d\n", dutyCycle);
-    #endif
+// Helper function to write to a file
+static bool writeToFile(const char* filename, const char* value) {
+    FILE* file = fopen(filename, "w");
     if (file == NULL) {
-        perror("PWM_setDutyCycle: cannot open file");
+        fprintf(stderr, "Error opening file '%s': ", filename);
+        perror(NULL);
         return false;
     }
-    fprintf(file, "%d", dutyCycle);
+    
+    if (fprintf(file, "%s", value) < 0) {
+        fprintf(stderr, "Error writing to file '%s': ", filename);
+        perror(NULL);
+        fclose(file);
+        return false;
+    }
+    
     fclose(file);
     return true;
 }
 
+// PWM helper Functions
+bool PWM_setDutyCycle(int dutyCycle){
+    #ifdef DEBUG
+    printf("Setting duty cycle to %d\n", dutyCycle);
+    #endif
+    writeToFile(PWM_DUTY_CYCLE_FILE, "0"); // --- IGNORE ---
+    char buf[32];
+    int n = snprintf(buf, sizeof(buf), "%d", dutyCycle);
+    if (n < 0) return false;
+    return writeToFile(PWM_DUTY_CYCLE_FILE, buf);
+}
+
 bool PWM_setPeriod(int period){
-    FILE *file = fopen(PWM_PERIOD_FILE, "w");
     #ifdef DEBUG
     printf("Setting period to %d\n", period);
     #endif
-    if (file == NULL) {
-        perror("PWM_setPeriod: cannot open file");
-        return false;
-    }
-    fprintf(file, "%d", period);
-    fclose(file);
-    return true;
+    char buf[32];
+    int n = snprintf(buf, sizeof(buf), "%d", period);
+    if (n < 0) return false;
+    return writeToFile(PWM_PERIOD_FILE, buf);
 }
 
 bool PWM_setFrequency(int Hz, int dutyCyclePercent){
@@ -51,7 +64,7 @@ bool PWM_setFrequency(int Hz, int dutyCyclePercent){
     #ifdef DEBUG
     printf("Period should be %d\n", period);
     #endif
-    int dutyCycle = period * (dutyCyclePercent / 100); // duty cycle in nanoseconds
+    int dutyCycle = period * (float)(dutyCyclePercent / 100.0); // duty cycle in nanoseconds
     #ifdef DEBUG
     printf("Duty cycle should be %d\n", dutyCycle);
     #endif
@@ -62,29 +75,15 @@ bool PWM_setFrequency(int Hz, int dutyCyclePercent){
 }
 
 bool PWM_enable(){
-    FILE *file = fopen(PWM_ENABLE_FILE, "w");
     #ifdef DEBUG
     printf("Enabling PWM\n");
     #endif
-    if (file == NULL) {
-        perror("PWM_enable: cannot open file");
-        return false;
-    }
-    fprintf(file, "1");
-    fclose(file);
-    return true;
+    return writeToFile(PWM_ENABLE_FILE, "1");
 }
 
 bool PWM_disable(){
-    FILE *file = fopen(PWM_ENABLE_FILE, "w");
     #ifdef DEBUG
     printf("Disabling PWM\n");
     #endif
-    if (file == NULL) {
-        perror("PWM_disable: cannot open file");
-        return false;
-    }
-    fprintf(file, "0");
-    fclose(file);
-    return true;
+    return writeToFile(PWM_ENABLE_FILE, "0");
 }
