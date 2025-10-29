@@ -33,5 +33,6 @@ int main() {
        printf("Starting light_sampler application...\n");
        PWM_setFrequency(1, 50); // Set initial frequency to 1 Hz with 50% duty cycle
        PWM_enable();
+       rotary_start();
        return 0;
 }
