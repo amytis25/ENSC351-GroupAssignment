@@ -19,6 +19,15 @@
     - output A - GPIO5 gpiochip2 15
     - output B - GPIO6 gpiochip2 17
 
+## RUNNING CMAKE
+- for host:
+    ```shell
+        ./buildHost.sh
+    ```
+- for target:
+    ```shell
+        ./buildTarget.sh
+    ```
 
 ## Manually Running CMake
 
