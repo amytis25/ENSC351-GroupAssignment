@@ -1,24 +1,23 @@
 // rotary_encoder.h
+// Interface for reading from a rotary encoder using GPIO
 
 #pragma once
 #include <stdbool.h>
-#include <stdint.h>
 
-typedef struct Rotary Rotary;
+// Initialize the rotary encoder on the specified GPIO pins
+// Uses GPIO chip 2 with pins:
+// - Output A: GPIO 15 (GPIO5)
+// - Output B: GPIO 17 (GPIO6)
+// Returns true if initialization was successful, false otherwise
+bool rotary_init(void);
 
-//  Create and start a rotary encoder reader thread
-//  chip_name: e.g., "gpiochip0"
-//  line_a_offset / line_b_offset: GPIO line offsets for channels A and B
-//  active_low: set true if your wiring inverts the logic level
-//  debounce_us: ignore edges that occur within this many microseconds of the last processed edge
-Rotary* Rotary_create(const char* chip_name, int line_a_offset, int line_b_offset,
-                      bool active_low, int debounce_us);
+// Start the rotary encoder polling thread
+// This function creates a background thread that continuously monitors the encoder
+void rotary_start(void);
 
-void Rotary_destroy(Rotary* r);
+// Get the current count from the rotary encoder
+// Returns the accumulated count (positive for clockwise, negative for counter-clockwise)
+int rotary_getCount(void);
 
-int32_t Rotary_getCount(Rotary* r);
-void    Rotary_setCount(Rotary* r, int32_t value);
-void    Rotary_reset(Rotary* r);
-
-// Optional: non-blocking snapshot of last raw AB state (00..11)
-int     Rotary_getAB(Rotary* r);
+// Clean up and release resources used by the rotary encoder
+void rotary_close(void);
