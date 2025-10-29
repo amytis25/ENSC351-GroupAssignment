@@ -4,12 +4,33 @@
 #include <time.h>
 #include "hal/timing.h"
 #include "hal/PWM.h"
+#include <unistd.h>
 
 #define DEBUG 
 
 #define NANOSECONDS_IN_SECOND 1000000000
 
 // Helper function to write to a file
+bool PWM_export(void){
+    // If the PWM sysfs already exists, consider it exported.
+    if (access(PWM_ENABLE_FILE, F_OK) == 0) return true;
+
+    // Try to export the PWM using helper tool. Do not call `sudo` here;
+    // the caller should run the program with appropriate privileges.
+    int rc = system("beagle-pwm-export --pin GPIO15");
+    if (rc != 0) {
+        fprintf(stderr, "PWM_export: beagle-pwm-export failed (rc=%d)\n", rc);
+        return false;
+    }
+
+    // Wait briefly for sysfs entries to appear
+    for (int i = 0; i < 20; ++i) {
+        if (access(PWM_ENABLE_FILE, F_OK) == 0) return true;
+        usleep(100000); // 100 ms
+    }
+    fprintf(stderr, "PWM_export: timeout waiting for %s\n", PWM_ENABLE_FILE);
+    return false;
+}
 static bool writeToFile(const char* filename, const char* value) {
     FILE* file = fopen(filename, "w");
     if (file == NULL) {

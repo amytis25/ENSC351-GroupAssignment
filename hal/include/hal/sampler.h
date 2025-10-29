@@ -54,4 +54,7 @@ double Sampler_getAverageReading(void);
 // Get the total number of light level samples taken so far.
 long long Sampler_getNumSamplesTaken(void);
 
+// Get the number of dips detected in the previous complete second.
+int Sampler_getDipCount(void);
+
 #endif

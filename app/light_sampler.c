@@ -30,25 +30,13 @@
 #include <stdbool.h>
 #include <time.h>
 
-// Count light dips in the sample history
-static int count_dips(double* samples, int size) {
-    if (size < 3) return 0;
-    
-    int dips = 0;
-    for (int i = 1; i < size - 1; i++) {
-        // A dip is when the middle value is significantly lower than both neighbors
-        if (samples[i] < samples[i-1] * 0.8 && samples[i] < samples[i+1] * 0.8) {
-            dips++;
-        }
-    }
-    return dips;
-}
 
 int main() {
     printf("Starting light_sampler application...\n");
 
     // Initialize modules
     Period_init();  // Initialize period timer first
+    PWM_export();
     
     if (!rotary_init()) {
         fprintf(stderr, "Failed to initialize rotary encoder\n");
@@ -62,7 +50,7 @@ int main() {
     // Set initial PWM frequency
     int current_freq = 1;  // Start at 1 Hz
     PWM_setFrequency(current_freq, 50);  // 50% duty cycle
-
+    
     // Main processing loop
     while (1) {
         // Update LED blink rate based on rotary encoder
@@ -72,8 +60,9 @@ int main() {
             current_freq = new_freq;
             PWM_setFrequency(current_freq, 50);
         }
-
-    // Process light samples every second
+        
+            
+       // Process light samples every second
        Sampler_moveCurrentDataToHistory();
        // Drain period-timer samples for the light-sample event so the
        // internal timestamp buffer doesn't overflow when sampling at
@@ -84,13 +73,13 @@ int main() {
               int history_size;
               double* samples = Sampler_getHistory(&history_size);
               if (samples) {
-              int dips = count_dips(samples, history_size);
+              int dips = Sampler_getDipCount();
               double avg = Sampler_getAverageReading();
               long long total = Sampler_getNumSamplesTaken();
               
               // Print status
-              printf("\nStatus Update:\n");
-              printf("Light dips in last second: %d\n", dips);
+              printf("\nStatus Update! \n in the last seconds:\n");
+              printf("Light dips: %d\n", dips);
               printf("Average light level: %.2f\n", avg);
               printf("Total samples: %lld\n", total);
               printf("LED frequency: %d Hz\n", current_freq);

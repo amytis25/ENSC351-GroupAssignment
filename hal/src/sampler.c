@@ -36,6 +36,8 @@ static long long totalSamples = 0;
 static double avgExp = 0.0;
 static bool firstSample = true;
 
+static int dipCount = 0;
+
 // Synchronization
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -131,6 +133,15 @@ long long Sampler_getNumSamplesTaken(void){
     return val;
 }
 
+int Sampler_getDipCount(void){
+    pthread_mutex_lock(&lock);
+    int val = dipCount;
+    dipCount = 0; // reset after reading
+    pthread_mutex_unlock(&lock);
+    return val;
+}
+
+
 // Sampler thread function
 // Continuously samples light levels and stores them.
 static void* samplerThread(void* arg) {
@@ -146,9 +157,14 @@ static void* samplerThread(void* arg) {
         
         // 2) Record timing event
         Period_markEvent(PERIOD_EVENT_SAMPLE_LIGHT);
+        pthread_mutex_lock(&lock);
+
+        if (volts < avgExp * 0.8 && !firstSample && currentSamples[currentSize] > avgExp) {
+            dipCount++;
+        }
 
         // 3) Update exponential average and store sample
-        pthread_mutex_lock(&lock);
+        
         if (firstSample) {
             avgExp = volts;
             firstSample = false;

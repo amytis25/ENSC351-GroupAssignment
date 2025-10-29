@@ -12,6 +12,7 @@
 
 
 // PWM helper Functions
+bool PWM_export();
 bool PWM_setDutyCycle(int dutyCycle);
 bool PWM_setPeriod(int period);
 bool PWM_setFrequency(int Hz, int dutyCyclePercent);
