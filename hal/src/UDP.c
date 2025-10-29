@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <ctype.h>
 
 typedef struct {
     long long (*get_count)(void);           // total samples so far
