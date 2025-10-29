@@ -3,7 +3,7 @@
 #   Use header as: #include "led.h"
 
 # Option to disable building the rotary encoder HAL (useful for temporary testing)
-option(BUILD_ROTARY_ENCODER "Build rotary encoder HAL module" ON)
+# option(BUILD_ROTARY_ENCODER "Build rotary encoder HAL module" ON)
 option(BUILD_SAMPLER "Build sampler HAL module" ON)
 
 # Find all source files in the src directory
@@ -13,9 +13,9 @@ file(GLOB MY_SOURCES "src/*.c")
 # If requested, remove the rotary encoder source from the list so it is not
 # compiled into the `hal` library. This is a cheap way to temporarily omit
 # a single problematic module without changing other files.
-if(NOT BUILD_ROTARY_ENCODER)
-	list(REMOVE_ITEM MY_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/rotary_encoder.c")
-endif()
+# if(NOT BUILD_ROTARY_ENCODER)
+#	list(REMOVE_ITEM MY_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/rotary_encoder.c")
+#endif()
 
 # Allow temporarily excluding the sampler module while it's being worked on.
 if(NOT BUILD_SAMPLER)
