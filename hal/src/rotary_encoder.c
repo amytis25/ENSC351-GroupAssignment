@@ -1,5 +1,7 @@
 // hal/rotary_encoder.c
 // Minimal GPIO button via /dev/gpiochip2 (v1 API). No sysfs.
+
+// ============ MODIFIED BUTTON.C =================
 #define _GNU_SOURCE
 #include "hal/rotary_encoder.h"
 #include "hal/periodTimer.h"  // <-- we will mark steps here
@@ -18,8 +20,10 @@
 #include <linux/gpio.h>
 
 #define GPIOCHIP_PATH "/dev/gpiochip2"
-#define BUTTON_LINE   8     // from `gpioinfo`: gpiochip2 8 "GPIO17"
-#define ACTIVE_LOW    1     // pressed pulls line LOW (typical with pull-up)
+#define OUTPUT_A   15     // from `gpioinfo`: gpiochip2 15 "GPIO5"
+#define OUTPUT_B   17     // from `gpioinfo`: gpiochip2 17 "GPIO6"
+//#define ACTIVE_LOW    1     // pressed pulls line LOW (typical with pull-up)
+// need to change this for our use 
 
 static int line_fd = -1;
 
@@ -29,7 +33,8 @@ bool Button_init(void) {
 
     struct gpiohandle_request req;
     memset(&req, 0, sizeof(req));
-    req.lineoffsets[0] = BUTTON_LINE;
+    // req.lineoffsets[0] = BUTTON_LINE;
+    // invalid, change this
     req.lines = 1;
     req.flags = GPIOHANDLE_REQUEST_INPUT;
 #ifdef GPIOHANDLE_REQUEST_BIAS_PULL_UP
@@ -46,7 +51,7 @@ bool Button_init(void) {
     line_fd = req.fd; // handle used for reads
     return (line_fd >= 0);
 }
-
+/*  I will change this to "read GPIO or something. since we have two"
 bool Button_read(bool *pressed) {
     if (line_fd < 0 || !pressed) return false;
 
@@ -57,6 +62,7 @@ bool Button_read(bool *pressed) {
         perror("GPIOHANDLE_GET_LINE_VALUES_IOCTL");
         return false;
     }
+    
 
 #if ACTIVE_LOW
     *pressed = (data.values[0] == 0);  // pressed = logic low
@@ -65,15 +71,21 @@ bool Button_read(bool *pressed) {
 #endif
     return true;
 }
+    */
 
+    // not sure what this does????
 void Button_close(void) {
     if (line_fd >= 0) { close(line_fd); line_fd = -1; }
 }
 
+/*  I dont think we need this, covered in periodTimer
 // ====== Configure polling/debounce ======
 #define SAMPLE_US        500        // poll every 0.5 ms (2 kHz)
 #define DEBOUNCE_US      800        // must be stable this long to accept a change
 #define STABLE_SAMPLES   (DEBOUNCE_US / SAMPLE_US)
+*/ 
+
+// ========EVERYTHING BELOW THIS LINE IS NEW FROM THE ROTARY ENCODER MODULE DRAFT!!!!!========
 
 // ====== Internal state ======
 typedef struct {
