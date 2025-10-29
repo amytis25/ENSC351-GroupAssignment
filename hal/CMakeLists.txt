@@ -12,6 +12,6 @@ add_library(hal STATIC ${MY_SOURCES})
 # Make the include directory available to users of this library
 target_include_directories(hal PUBLIC include)
 
-# Link required libraries for LED control and timing
-target_link_libraries(hal PUBLIC rt)  # For nanosleep and real-time functions
+# Link required libraries for LED control, timing, and GPIO
+target_link_libraries(hal PUBLIC rt gpiod pthread)  # rt for timing, gpiod for GPIO, pthread for threading
 
