@@ -18,6 +18,8 @@
 #define SENSOR_CHANNEL 0 // ADC channel for light sensor
 
 #define MAX_SAMPLES_PER_SECOND 1000
+#define MAX_ADC_VALUE 4095.0   
+#define MAX_VOLTAGE 3.3       // Maximum voltage corresponding to ADC full scale 
 #define MAX_SAMPLE_SIZE (MAX_SAMPLES_PER_SECOND + 0.1*MAX_SAMPLES_PER_SECOND) // buffer for 10% overhead
 
 static pthread_t samplerThreadId;
@@ -38,10 +40,7 @@ static long long totalSamples = 0;
 static double avgExp = 0.0;
 static bool firstSample = true;
 
-// last dip time to enforce refractory period (ms)
-static long long lastDipTimeMs = 0;
-// ignore new dips within this many milliseconds after a detected dip
-#define DIP_REFRACTORY_MS 5
+
 
 // Synchronization
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -66,6 +65,11 @@ void Sampler_init(void){
     }
 }
 
+double ADC_to_volts (int ADC_Reading)
+{
+    double volts = (ADC_Reading/MAX_ADC_VALUE) * MAX_VOLTAGE;
+    return volts;
+}
 void Sampler_cleanup(void){
     keepRunning = false;
     pthread_join(samplerThreadId, NULL);
@@ -152,7 +156,7 @@ static void* samplerThread(void* arg) {
     
      while (keepRunning) {
         // 1) Sample ADC (single call)
-        double volts = Read_ADC_Values(SENSOR_CHANNEL);
+        double volts = ADC_to_volts(Read_ADC_Values(SENSOR_CHANNEL));
         if (volts < 0) {
             perror("samplerThread: failed Read_ADC_Values");
             // small sleep to avoid busy-looping on persistent error
@@ -172,20 +176,30 @@ static void* samplerThread(void* arg) {
         // Use the previous stored sample (if any) and a time-based refractory
         // window so that multiple sampled points inside the same physical dip
         // aren't counted more than once.
-        long long nowMs = getTimeInMs();
+        
         if (!firstSample) {
             if (currentSize > 0) {
                 double prev = currentSamples[currentSize-1];
-                if (volts < avgExp && prev > avgExp) {
-                    if (nowMs - lastDipTimeMs > DIP_REFRACTORY_MS) {
-                        Period_markEvent(PERIOD_EVENT_DIP);  // Record dip in period timer
-                        #ifdef DEBUG
+                if (volts < (avgExp-0.1) && prev > avgExp) {
+                    Period_markEvent(PERIOD_EVENT_DIP);  // Record dip in period timer
+                    #ifdef DEBUG
                         printf("Detected dip!\n");
-                        #endif
-                        lastDipTimeMs = nowMs;
+                    #endif
+                    while (volts < (avgExp-0.7)) {
+                        
+                        volts = ADC_to_volts(Read_ADC_Values(SENSOR_CHANNEL));
+                    
+                        // Update average during this wait
+                        avgExp = 0.999 * avgExp + 0.001 * volts;
+                        if (currentSize < MAX_SAMPLE_SIZE) {
+                        currentSamples[currentSize++] = volts;
+                    }
+                    totalSamples++;
+                    sleepForMs(1);
                     }
                 }
             }
+    
         }
 
         // 3) Update exponential average and store sample
