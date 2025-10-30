@@ -177,28 +177,25 @@ static void* samplerThread(void* arg) {
         // window so that multiple sampled points inside the same physical dip
         // aren't counted more than once.
         
-        if (!firstSample) {
-            if (currentSize > 0) {
-                double prev = currentSamples[currentSize-1];
-                if (volts < (avgExp-0.1) && prev > avgExp) {
+        if (!firstSample && currentSize > 0) {
+    
+                if (volts < (avgExp-0.1)) {
                     Period_markEvent(PERIOD_EVENT_DIP);  // Record dip in period timer
                     #ifdef DEBUG
                         printf("Detected dip!\n");
                     #endif
-                    while (volts < (avgExp-0.7)) {
-                        
-                        volts = ADC_to_volts(Read_ADC_Values(SENSOR_CHANNEL));
-                    
+                    while (volts < (avgExp-0.3)) {
                         // Update average during this wait
                         avgExp = 0.999 * avgExp + 0.001 * volts;
                         if (currentSize < MAX_SAMPLE_SIZE) {
-                        currentSamples[currentSize++] = volts;
-                    }
+                        currentSamples[currentSize++] = volts; 
+                        }
+
                     totalSamples++;
                     sleepForMs(1);
+                    volts = ADC_to_volts(Read_ADC_Values(SENSOR_CHANNEL));
                     }
                 }
-            }
     
         }
 
