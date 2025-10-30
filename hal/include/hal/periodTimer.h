@@ -21,6 +21,7 @@
 enum Period_whichEvent {
     PERIOD_EVENT_SAMPLE_LIGHT,
     PERIOD_EVENT_MARK_SECOND,
+    PERIOD_EVENT_DIP, // new: store dip timestamps
     NUM_PERIOD_EVENTS
 };
 

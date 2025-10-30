@@ -74,12 +74,15 @@ int main() {
             // internal timestamp buffer doesn't overflow when sampling at
             // high rates (Sampler marks an event ~1000Hz). We don't need
             // the stats here, so discard them.
-            Period_statistics_t _unused_stats;
-            Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &_unused_stats);
+            Period_statistics_t _lastSecondsSample;
+            Period_statistics_t dipStats;
+            Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &_lastSecondsSample);
+            Period_getStatisticsAndClear(PERIOD_EVENT_DIP, &dipStats);
+            int dips_in_last_second = dipStats.numSamples;
             int history_size;
             double* samples = Sampler_getHistory(&history_size);
             if (samples) {
-            int dips = Sampler_getDipCount();
+            //int dips = Sampler_getDipCount();
             lastTime = getTimeInMs();
             double avg = Sampler_getAverageReading();
             long long total = Sampler_getNumSamplesTaken();
@@ -87,7 +90,7 @@ int main() {
             // Print status
             printf("\n\nStatus Update, its been %lld seconds! \n", currentTimeS);
             printf("In the last %lld seconds:\n", timeDiff);
-            printf("Light dips: %d\n", dips);
+            printf("Light dips: %d\n", dips_in_last_second);
             printf("Average light level: %.2f\n", avg);
             printf("Total samples: %lld\n", total);
             printf("LED frequency: %d Hz\n\n", current_freq);

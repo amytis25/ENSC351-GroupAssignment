@@ -182,6 +182,10 @@ static void* samplerThread(void* arg) {
                 if (volts < avgExp && prev > avgExp) {
                     if (nowMs - lastDipTimeMs > DIP_REFRACTORY_MS) {
                         dipCount++;
+                        Period_markEvent(PERIOD_EVENT_DIP);
+                         #ifdef DEBUG
+                        printf("Detected dip! Total dips: %d\n", dipCount);
+                        #endif
                         lastDipTimeMs = nowMs;
                     }
                 }
