@@ -72,6 +72,48 @@ bool PWM_setPeriod(int period){
     return writeToFile(PWM_PERIOD_FILE, buf);
 }
 
+
+bool PWM_setFrequency(int Hz, int dutyCyclePercent)
+{
+    if (dutyCyclePercent < 0 || dutyCyclePercent > 100) {
+        fprintf(stderr, "PWM_setFrequency: invalid duty cycle percentage\n");
+        return false;
+    }
+
+    // Assignment spec: support 0..500 Hz
+    if (Hz < 0)   Hz = 0;
+    if (Hz > 500) Hz = 500;
+
+    if (Hz == 0) {
+        // 0 Hz -> LED off / stop PWM
+        // Option A: disable channel
+        PWM_disable();
+        return true;
+        // Option B: keep enabled but set duty=0 and a valid period if your app prefers
+        // PWM_setDutyCycle(0); PWM_setPeriod(100000000); return true; // e.g., 10Hz period
+    }
+
+    // Use 64-bit to avoid any overflow/rounding surprises
+    const unsigned long long NSEC = 1000000000ULL;
+    unsigned long long period_ull = NSEC / (unsigned long long)Hz;
+    unsigned long long duty_ull   = (period_ull * (unsigned long long)dutyCyclePercent) / 100ULL;
+
+    // SAFEST ORDER:
+    // 1) duty=0  (so period can shrink safely)
+    // 2) period=new
+    // 3) duty=desired
+    if (!PWM_setDutyCycle(0)) return false;
+
+    // cast to int because your helpers take int; safe in our range
+    if (!PWM_setPeriod((int)period_ull)) return false;
+
+    if (!PWM_setDutyCycle((int)duty_ull)) return false;
+
+    // ensure enabled
+    PWM_enable();
+    return true;
+}
+/*ORIGINAL CODE
 bool PWM_setFrequency(int Hz, int dutyCyclePercent){
     if (Hz <= 0) {
         fprintf(stderr, "PWM_setFrequency: frequency must be positive\n");
@@ -94,7 +136,7 @@ bool PWM_setFrequency(int Hz, int dutyCyclePercent){
     #endif
     return PWM_setPeriod(period) && PWM_setDutyCycle(dutyCycle);
 }
-
+*/
 bool PWM_enable(){
     #ifdef DEBUG
     printf("Enabling PWM\n");
