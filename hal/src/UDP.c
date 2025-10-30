@@ -17,17 +17,17 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <math.h>
 
-typedef struct {
-    long long (*get_count)(void);           // total samples so far
-    int       (*get_history_size)(void);    // samples in previous second
-    int       (*get_dips)(void);            // dips in previous second
-    double*   (*get_history)(int* size);    // malloc'd array of voltages; caller will free
-} UdpCallbacks;
+#include "hal/UDP.h"
 
 static int                g_sock = -1;
 static pthread_t          g_thread;
-static volatile bool      g_running = false;
+volatile bool      g_running = false;
+// streaming target state
+static volatile bool g_streaming = false;
+static struct sockaddr_in g_stream_cli;
+static pthread_mutex_t g_stream_lock = PTHREAD_MUTEX_INITIALIZER;
 static UdpCallbacks       g_cb = {0};
 static char               g_last_cmd[64] = {0};
 
@@ -50,6 +50,7 @@ static void send_help(int sock, const struct sockaddr_in* cli)
         "length      -- get the number of samples taken in the previously completed second.\n"
         "dips        -- get the number of dips in the previously completed second.\n"
         "history     -- get all the samples in the previously completed second.\n"
+        "history_bin -- get all the samples as compact binary (16-bit millivolts).\n"
         "stop        -- cause the server program to end.\n"
         "<enter>     -- repeat last command.\n";
     sendto(sock, h, (int)strlen(h), 0, (const struct sockaddr*)cli, sizeof(*cli));
@@ -138,10 +139,80 @@ static void* udp_thread(void* arg)
                 send_history(g_sock, &cli, H, N);
                 free(H);
             }
+        } else if (!strcmp(s, "history_bin")) {
+            // Send compact binary history: header (magic 'HBIN' + uint32 N) then
+            // N samples as uint16_t millivolts (network order). Chunk packets <1400 bytes.
+            int N = 0;
+            double* H = g_cb.get_history ? g_cb.get_history(&N) : NULL;
+            if (!H || N <= 0) {
+                send_text(g_sock, &cli, "(no history)\n");
+            } else {
+                const int MAX = 1400;
+                // send 8-byte header: magic + N
+                uint32_t magic = htonl(0x4842494E); // 'HBIN'
+                uint32_t n_n = htonl((uint32_t)N);
+                char hdr[8];
+                memcpy(hdr, &magic, 4);
+                memcpy(hdr+4, &n_n, 4);
+                sendto(g_sock, hdr, sizeof(hdr), 0, (const struct sockaddr*)&cli, sizeof(cli));
+
+                char pkt[MAX];
+                int pos = 0;
+                for (int i = 0; i < N; ++i) {
+                    // convert volts (double) to millivolts uint16_t
+                    double v = H[i];
+                    int mv = (int)(v * 1000.0 + 0.5);
+                    if (mv < 0) mv = 0;
+                    if (mv > 0xFFFF) mv = 0xFFFF;
+                    uint16_t w = htons((uint16_t)mv);
+                    if (pos + 2 > MAX) {
+                        sendto(g_sock, pkt, pos, 0, (const struct sockaddr*)&cli, sizeof(cli));
+                        pos = 0;
+                    }
+                    memcpy(pkt + pos, &w, 2);
+                    pos += 2;
+                }
+                if (pos > 0) sendto(g_sock, pkt, pos, 0, (const struct sockaddr*)&cli, sizeof(cli));
+                free(H);
+            }
+        } else if (!strncmp(s, "stream ", 7)) {
+            // stream start|stop
+            char *arg = s + 7;
+            if (!strcmp(arg, "start")) {
+                // register this client as the streaming target
+                pthread_mutex_lock(&g_stream_lock);
+                g_stream_cli = cli;
+                g_streaming = true;
+                pthread_mutex_unlock(&g_stream_lock);
+                send_text(g_sock, &cli, "OK stream started\n");
+            } else if (!strcmp(arg, "stop")) {
+                pthread_mutex_lock(&g_stream_lock);
+                g_streaming = false;
+                pthread_mutex_unlock(&g_stream_lock);
+                send_text(g_sock, &cli, "OK stream stopped\n");
+            } else {
+                send_text(g_sock, &cli, "Unknown stream command\n");
+            }
         } else if (!strcmp(s, "stop")) {
             send_text(g_sock, &cli, "Program terminating.\n");
             g_running = false; // tell main to shut down
             break;
+        } else if (!strncmp(s, "setfreq ", 8)) {
+            if (g_cb.set_frequency) {
+                int hz = atoi(s + 8);
+                bool ok = g_cb.set_frequency(hz);
+                send_text(g_sock, &cli, ok ? "OK setfreq %d\n" : "FAIL setfreq %d\n", hz);
+            } else {
+                send_text(g_sock, &cli, "setfreq not supported\n");
+            }
+        } else if (!strncmp(s, "setduty ", 8)) {
+            if (g_cb.set_duty) {
+                int pct = atoi(s + 8);
+                bool ok = g_cb.set_duty(pct);
+                send_text(g_sock, &cli, ok ? "OK setduty %d\n" : "FAIL setduty %d\n", pct);
+            } else {
+                send_text(g_sock, &cli, "setduty not supported\n");
+            }
         } else {
             send_text(g_sock, &cli, "Unknown command: %s\n", s);
         }
@@ -184,6 +255,24 @@ void udp_stop(void)
     pthread_join(g_thread, NULL);
     close(g_sock);
     g_sock = -1;
+}
+
+void udp_send_stream_text(const char *fmt, ...)
+{
+    // format into a buffer then send to the registered stream client if any
+    char buf[1400];
+    va_list ap; va_start(ap, fmt);
+    int n = vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    if (n <= 0) return;
+
+    pthread_mutex_lock(&g_stream_lock);
+    bool sendit = g_streaming;
+    struct sockaddr_in cli = g_stream_cli;
+    pthread_mutex_unlock(&g_stream_lock);
+
+    if (!sendit) return;
+    sendto(g_sock, buf, n, 0, (const struct sockaddr*)&cli, sizeof(cli));
 }
 
 /* ------------------------- DEMO MAIN (remove in your app) ------------------ */

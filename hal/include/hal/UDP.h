@@ -28,6 +28,14 @@ typedef struct {
     int       (*get_dips)(void);            // dips detected last second
     double*   (*get_history)(int* size);    // malloc'd array of voltages
                                             // caller frees the returned array
+    /* Optional control callbacks (set to NULL if unsupported). These are
+       invoked by the UDP command handler when runtime control commands
+       like `setfreq` or `setduty` are received. Return true on success. */
+    bool      (*set_frequency)(int hz);
+    bool      (*set_duty)(int pct);
+    double    (*get_average)(void);           // average light reading
+    long long (*get_total_samples)(void);     // total samples taken
+    bool      (*set_console_output)(bool enabled); // Enable/disable console output
 } UdpCallbacks;
 
 // ---------------------------------------------------------------------------
@@ -43,6 +51,10 @@ int udp_start(uint16_t port, UdpCallbacks cb);
 // Safe to call even if server isn’t running.
 // ---------------------------------------------------------------------------
 void udp_stop(void);
+
+// Send formatted text to the currently-registered stream client (if any).
+// This is a no-op if no client has started streaming.
+void udp_send_stream_text(const char *fmt, ...);
 
 // ---------------------------------------------------------------------------
 // Global flag the main loop can check to see if the UDP thread requested stop
