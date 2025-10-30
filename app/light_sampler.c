@@ -76,7 +76,7 @@ static void display_status(
 {
     // Line 1: counts and levels
     // Fields are fixed-width to keep columns aligned as values change
-    printf("\nSamples: %4d  LED: %3d Hz  Light: %6.3fV  Dips: %3d",
+    printf("\nSamples: %4d  LED: %3d Hz  avg: %6.3fV  Dips: %3d   ",
            samples_in_second, led_hz, avg_light, dips);
 
     // Timing jitter information for samples collected during the previous second
