@@ -21,7 +21,8 @@
 #define MAX_ADC_VALUE 4095.0   
 #define MAX_VOLTAGE 3.3       // Maximum voltage corresponding to ADC full scale 
 #define MAX_SAMPLE_SIZE (MAX_SAMPLES_PER_SECOND + 0.1*MAX_SAMPLES_PER_SECOND) // buffer for 10% overhead
-
+#define DIP_THRESHOLD 0.1     // Must drop this far below average to trigger (volts)
+#define DIP_HYSTERESIS 0.03   // Must recover this much to re-arm
 static pthread_t samplerThreadId;
 static bool keepRunning = false;
 
@@ -153,6 +154,7 @@ int Sampler_getDipCount(void){
 // Continuously samples light levels and stores them.
 static void* samplerThread(void* arg) {
     (void)arg;  // Suppress unused parameter warning
+    bool dipArmed = true;  // State of dip detector
     
      while (keepRunning) {
         // 1) Sample ADC (single call)
@@ -167,35 +169,20 @@ static void* samplerThread(void* arg) {
         // 2) Record timing event
         Period_markEvent(PERIOD_EVENT_SAMPLE_LIGHT);
         pthread_mutex_lock(&lock);
-        #ifdef DEBUG
-        double last_sample = (currentSize > 0) ? currentSamples[currentSize-1] : volts;
-        printf("Sampling light level: %.2f V, last reading: %.2f V, average: %.2f V\n", volts, last_sample, avgExp);
-        #endif
 
         // Detect a dip as a transition from above-average to below-average.
         // Use the previous stored sample (if any) and a time-based refractory
         // window so that multiple sampled points inside the same physical dip
         // aren't counted more than once.
-        
-        if (!firstSample && currentSize > 0) {
-    
-                if (volts < (avgExp-0.1)) {
-                    Period_markEvent(PERIOD_EVENT_DIP);  // Record dip in period timer
-                    #ifdef DEBUG
-                        printf("Detected dip!\n");
-                    #endif
-                    while (volts < (avgExp-0.3)) {
-                        // Update average during this wait
-                        avgExp = 0.999 * avgExp + 0.001 * volts;
-                        if (currentSize < MAX_SAMPLE_SIZE) {
-                        currentSamples[currentSize++] = volts; 
-                        }
-
-                    totalSamples++;
-                    sleepForMs(1);
-                    volts = ADC_to_volts(Read_ADC_Values(SENSOR_CHANNEL));
-                    }
-                }
+        if (!firstSample && currentSize > 0 && !dipArmed && volts > (avgExp - DIP_HYSTERESIS)) {
+            dipArmed = true;
+        }
+        else if (!firstSample && currentSize > 0 && dipArmed && volts < (avgExp - DIP_THRESHOLD)) {
+            Period_markEvent(PERIOD_EVENT_DIP);  // Record dip in period timer
+            dipArmed = false;
+            #ifdef DEBUG
+                printf("Detected dip!\n");
+            #endif
     
         }
 
