@@ -64,25 +64,54 @@ static void cleanup_resources(void) {
 static int current_freq = 1;
 static bool console_output_enabled = true;  // Allow disabling console output
 
-// Status reporting helper (called from both UDP and main thread)
-static void send_status(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    
-    // Always send to UDP stream if clients are connected
-    char buffer[256];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    udp_send_stream_text("%s", buffer);
-    
-    // Optionally print to console
-    if (console_output_enabled) {
-        va_end(args);
-        va_start(args, format);
-        vprintf(format, args);
+// Format and display status each second (fixed-width fields for stable alignment)
+static void display_status(
+    int samples_in_second,
+    int led_hz,
+    double avg_light,
+    int dips,
+    const Period_statistics_t *light_stats,
+    const double *history_samples,
+    int history_size)
+{
+    // Line 1: counts and levels
+    // Fields are fixed-width to keep columns aligned as values change
+    printf("\nSamples: %4d  LED: %3d Hz  Light: %6.3fV  Dips: %3d\n",
+           samples_in_second, led_hz, avg_light, dips);
+
+    // Timing jitter information for samples collected during the previous second
+    // Format: Smpl ms[{min}, {max}] avg {avg}/{num-samples}
+    if (light_stats) {
+        printf("Smpl ms[%6.1f, %6.1f] avg %6.1f/%4d\n",
+               light_stats->minPeriodInMs,
+               light_stats->maxPeriodInMs,
+               light_stats->avgPeriodInMs,
+               light_stats->numSamples);
     }
-    
-    va_end(args);
+
+    // Line 2: up to 10 evenly-spaced samples from the previous second
+    if (history_samples && history_size > 0) {
+        int to_show = history_size < 10 ? history_size : 10;
+        // Evenly spaced indices across [0, history_size-1]
+        for (int k = 0; k < to_show; k++) {
+            int idx;
+            if (history_size <= 10) {
+                idx = k;
+            } else {
+                // Map k in [0,9] to an index in [0,history_size-1]
+                // round((k * (N-1)) / 9.0)
+                double pos = (double)k * (double)(history_size - 1) / 9.0;
+                idx = (int)(pos + 0.5);
+            }
+            // Print as {sample number}:{value} with stable widths
+            printf(" %4d:%6.3f", idx, history_samples[idx]);
+        }
+        printf("\n");
+    }
 }
+
+// (Removed) send_status helper was used for UDP + console combined output.
+// Terminal output is now handled by display_status() for fixed-format printing.
 
 // UDP control wrappers (called from UDP thread)
 static bool cb_set_console_output(bool enabled) {
@@ -144,7 +173,7 @@ int main() {
     // Set initial PWM frequency
     PWM_setFrequency(current_freq, 50);  // 50% duty cycle
     long long lastTime = getTimeInMs();
-    long long startTimeS = getTimeInMs();
+    //long long startTimeS = getTimeInMs();
     // Main processing loop
     while (running) {
         // Update LED blink rate based on rotary encoder
@@ -182,17 +211,17 @@ int main() {
             //int dips = Sampler_getDipCount();
             
             double avg = Sampler_getAverageReading();
-            long long total = Sampler_getNumSamplesTaken();
             lastTime = getTimeInMs();
-            long long TotalTimeS = (getTimeInMs()-startTimeS)/MS_IN_SECOND;
-            // Print status
-            // Send unified status update through our helper
-            send_status("\n\nStatus Update, its been %lld seconds!\n", TotalTimeS);
-            send_status("In the last %lld seconds:\n", timeDiff);
-            send_status("Light dips: %d\n", dips_in_last_second);
-            send_status("Average light level: %.2f\n", avg);
-            send_status("Total samples: %lld\n", total);
-            send_status("LED frequency: %d Hz\n\n", current_freq);
+            // long long TotalTimeS = (getTimeInMs()-startTimeS)/MS_IN_SECOND; // no longer printed
+            // Print terminal status exactly as specified
+            display_status(
+                history_size,           // samples in previous second
+                current_freq,            // LED Hz
+                avg,                     // averaged light level (V)
+                dips_in_last_second,     // dips found in previous second
+                &_lastSecondsSample,     // timing jitter stats for light samples
+                samples,                 // history samples from previous second
+                history_size);
               
             free(samples);
             }
