@@ -31,8 +31,34 @@
 #include <stdbool.h>
 #include <time.h>
 #include <stdarg.h>  // for va_list, va_start, va_end
+#include <signal.h>  // for signal handling
 
 #define MS_IN_SECOND 1000
+
+// Flag to indicate when the program should exit
+static volatile bool running = true;
+
+// Signal handler for CTRL+C
+static void cleanup_handler(int signo) {
+    if (signo == SIGINT) {
+        printf("\nReceived CTRL+C, cleaning up...\n");
+        running = false;
+    }
+}
+
+// Function to cleanup all resources
+static void cleanup_resources(void) {
+    // Stop UDP server
+    udp_stop();
+    
+    // Cleanup all modules in reverse order of initialization
+    PWM_disable();
+    Sampler_cleanup();
+    rotary_close();
+    Period_cleanup();
+    
+    printf("Cleanup complete. Exiting.\n");
+}
 
 // Current PWM frequency (Hz). Made global so UDP control callbacks can access it.
 static int current_freq = 1;
@@ -78,6 +104,12 @@ static bool cb_set_duty(int pct) {
 }
 
 int main() {
+    // Set up signal handler for CTRL+C
+    if (signal(SIGINT, cleanup_handler) == SIG_ERR) {
+        fprintf(stderr, "Failed to set up signal handler\n");
+        return -1;
+    }
+    
     printf("Starting light_sampler application...\n");
 
     // Initialize modules
@@ -114,7 +146,7 @@ int main() {
     long long lastTime = getTimeInMs();
     long long startTimeS = getTimeInMs();
     // Main processing loop
-    while (1) {
+    while (running) {
         // Update LED blink rate based on rotary encoder
         int edges = rotary_getCount();
         
@@ -169,10 +201,7 @@ int main() {
               //sleepForMs(1000);
     }
 
-    // Cleanup (never reached in this version, but good practice)
-    PWM_disable();
-    Sampler_cleanup();
-    rotary_close();
-    Period_cleanup();
+    // Perform cleanup
+    cleanup_resources();
     return 0;
 }
