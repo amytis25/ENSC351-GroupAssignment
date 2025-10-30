@@ -38,7 +38,6 @@ static long long totalSamples = 0;
 static double avgExp = 0.0;
 static bool firstSample = true;
 
-static int dipCount = 0;
 // last dip time to enforce refractory period (ms)
 static long long lastDipTimeMs = 0;
 // ignore new dips within this many milliseconds after a detected dip
@@ -140,11 +139,9 @@ long long Sampler_getNumSamplesTaken(void){
 }
 
 int Sampler_getDipCount(void){
-    pthread_mutex_lock(&lock);
-    int val = dipCount;
-    dipCount = 0; // reset after reading
-    pthread_mutex_unlock(&lock);
-    return val;
+    Period_statistics_t stats;
+    Period_getStatisticsAndClear(PERIOD_EVENT_DIP, &stats);
+    return stats.numSamples;
 }
 
 
@@ -181,10 +178,9 @@ static void* samplerThread(void* arg) {
                 double prev = currentSamples[currentSize-1];
                 if (volts < avgExp && prev > avgExp) {
                     if (nowMs - lastDipTimeMs > DIP_REFRACTORY_MS) {
-                        dipCount++;
-                        Period_markEvent(PERIOD_EVENT_DIP);
-                         #ifdef DEBUG
-                        printf("Detected dip! Total dips: %d\n", dipCount);
+                        Period_markEvent(PERIOD_EVENT_DIP);  // Record dip in period timer
+                        #ifdef DEBUG
+                        printf("Detected dip!\n");
                         #endif
                         lastDipTimeMs = nowMs;
                     }

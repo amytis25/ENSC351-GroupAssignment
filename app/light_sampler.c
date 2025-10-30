@@ -99,7 +99,7 @@ int main() {
     UdpCallbacks cb = {
         .get_count = Sampler_getNumSamplesTaken,
         .get_history_size = Sampler_getHistorySize,
-        .get_dips = Sampler_getDipCount,
+        .get_dips = Sampler_getDipCount,        // Now uses Period timer directly
         .get_history = Sampler_getHistory,
         .set_frequency = cb_set_frequency,
         .set_duty = cb_set_duty,
@@ -116,11 +116,19 @@ int main() {
     // Main processing loop
     while (1) {
         // Update LED blink rate based on rotary encoder
-        int encoder_count = rotary_getCount();
-        int new_freq = 1 + abs(encoder_count % 10);  // Map to 1-10 Hz
+        int edges = rotary_getCount();
+        
+        // Convert edges to detents (4 edges per detent)
+        int detents = edges / 4;
+        
+        // Start at 10 Hz, add detents, and clamp to 1-500 Hz range
+        int new_freq = 10 + detents;
+        if (new_freq < 1)   new_freq = 1;    // Minimum 1 Hz
+        if (new_freq > 500) new_freq = 500;  // Maximum 500 Hz
+        
         if (new_freq != current_freq) {
             current_freq = new_freq;
-            PWM_setFrequency(current_freq, 50);
+            PWM_setFrequency(current_freq, 50);  // 50% duty cycle
         }
         
        long long timeDiff = (getTimeInMs() - lastTime)/MS_IN_SECOND;
