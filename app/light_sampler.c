@@ -83,12 +83,13 @@ int main() {
             double* samples = Sampler_getHistory(&history_size);
             if (samples) {
             //int dips = Sampler_getDipCount();
-            lastTime = getTimeInMs();
+            
             double avg = Sampler_getAverageReading();
             long long total = Sampler_getNumSamplesTaken();
-            long long currentTimeS = (getTimeInMs()-startTimeS)/MS_IN_SECOND;
+            lastTime = getTimeInMs();
+            long long TotalTimeS = (getTimeInMs()-startTimeS)/MS_IN_SECOND;
             // Print status
-            printf("\n\nStatus Update, its been %lld seconds! \n", currentTimeS);
+            printf("\n\nStatus Update, its been %lld seconds! \n", TotalTimeS);
             printf("In the last %lld seconds:\n", timeDiff);
             printf("Light dips: %d\n", dips_in_last_second);
             printf("Average light level: %.2f\n", avg);
