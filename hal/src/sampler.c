@@ -126,6 +126,14 @@ double* Sampler_getHistory(int *size){
     pthread_mutex_unlock(&lock);
     return copy;
 }
+Period_statistics_t Sampler_getLastSecondStatistics(void){
+    pthread_mutex_lock(&lock);
+    Period_statistics_t _lastSecondsSample;
+    //Period_statistics_t dipStats;
+    Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &_lastSecondsSample);
+    pthread_mutex_unlock(&lock);
+    return _lastSecondsSample;
+}
 
 // Get the average light level (not tied to the history).
 double Sampler_getAverageReading(void){
@@ -144,8 +152,10 @@ long long Sampler_getNumSamplesTaken(void){
 }
 
 int Sampler_getDipCount(void){
+    pthread_mutex_lock(&lock);
     Period_statistics_t stats;
     Period_getStatisticsAndClear(PERIOD_EVENT_DIP, &stats);
+    pthread_mutex_unlock(&lock);
     return stats.numSamples;
 }
 

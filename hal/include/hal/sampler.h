@@ -48,6 +48,9 @@ int Sampler_getHistorySize(void);
 // Note: It provides both data and size to ensure consistency.
 double* Sampler_getHistory(int *size);
 
+// Get statistics about the samples taken in the previous complete second.
+Period_statistics_t Sampler_getLastSecondStatistics(void);
+
 // Get the average light level (not tied to the history).
 double Sampler_getAverageReading(void);
 

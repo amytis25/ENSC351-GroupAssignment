@@ -196,19 +196,14 @@ int main() {
        if (timeDiff >= 1) {
             // Process light samples every second
             Sampler_moveCurrentDataToHistory();
-            // Drain period-timer samples for the light-sample event so the
-            // internal timestamp buffer doesn't overflow when sampling at
-            // high rates (Sampler marks an event ~1000Hz). We don't need
-            // the stats here, so discard them.
-            Period_statistics_t _lastSecondsSample;
-            Period_statistics_t dipStats;
-            Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &_lastSecondsSample);
-            Period_getStatisticsAndClear(PERIOD_EVENT_DIP, &dipStats);
-            int dips_in_last_second = dipStats.numSamples;
+            
+            Period_statistics_t _lastSecondsSample = Sampler_getLastSecondStatistics();
+            
+            int dips_in_last_second = Sampler_getDipCount();
             int history_size;
             double* samples = Sampler_getHistory(&history_size);
             if (samples) {
-            //int dips = Sampler_getDipCount();
+            
             
             double avg = Sampler_getAverageReading();
             lastTime = getTimeInMs();
@@ -226,8 +221,8 @@ int main() {
             free(samples);
             }
         }
-              // Wait for next second
-              //sleepForMs(1000);
+        // Wait for next second
+        //sleepForMs(1000);
     }
 
     // Perform cleanup
