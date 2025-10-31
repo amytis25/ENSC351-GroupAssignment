@@ -1,7 +1,7 @@
 # Build the reaction timer application, using the HAL
 
 # Option to allow excluding the helper/test file noworky.c when it's not needed
-option(BUILD_NOWORKY "Build noworky.c helper/test file" ON)
+option(BUILD_NOWORKY "Build noworky.c helper/test file" OFF)
 
 # Find all source files in current directory
 include_directories(include)

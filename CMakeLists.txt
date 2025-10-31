@@ -4,7 +4,7 @@ project(ENSC351_Assignment2 VERSION 1.0 DESCRIPTION "Light Sampler" LANGUAGES C)
 
 # Compiler options (inherited by sub-folders)
 set(CMAKE_C_STANDARD 11)
-add_compile_options(-Wall -Werror -Wpedantic -Wextra -g)
+add_compile_options(-Wall -Werror -Wpedantic -Wextra)
 add_compile_options(-fdiagnostics-color)
 
 # Enable address sanitizer for debugging
